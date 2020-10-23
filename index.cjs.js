@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.nsplit = exports.tsplit = exports.format = exports.stringTransforms = exports.right = exports.left = exports.isLetter = exports.camelCase = exports.pascalCase = exports.unString = exports.toggleCase = exports.stringify = exports.isMath = exports.isWhitespace = exports.isComparison = exports.isBitwise = exports.isLogic = exports.isArithmatic = exports.isWord = exports.isAlphaNum = exports.isDigit = exports.isUpper = exports.isLower = exports.isAlpha = exports.isControl = exports.isPunctuation = exports.isChar = exports.Chars = exports.toBytes = exports.rtrim = exports.ltrim = exports.reverse = exports.replaceAll = exports.SplitOptions = exports.default = void 0;
+exports.nestedSplit = exports.transplit = exports.format = exports.stringTransforms = exports.right = exports.left = exports.isLetter = exports.capitalize = exports.camelCase = exports.pascalCase = exports.unString = exports.toggleCase = exports.stringify = exports.isMath = exports.isWhitespace = exports.isComparison = exports.isBitwise = exports.isLogic = exports.isArithmatic = exports.isWord = exports.isAlphaNum = exports.isDigit = exports.isUpper = exports.isLower = exports.isAlpha = exports.isControl = exports.isPunctuation = exports.isChar = exports.Chars = exports.toBytes = exports.rtrim = exports.ltrim = exports.reverse = exports.replaceAll = exports.SplitOptions = exports.default = void 0;
 
 var _locustjsBase = require("locustjs-base");
 
@@ -13,7 +13,11 @@ var _locustjsExtensionsOptions = require("locustjs-extensions-options");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
 var SplitOptions = _locustjsEnum.default.define({
   none: 0,
@@ -165,12 +169,12 @@ var isMath = function isMath(x) {
 
 exports.isMath = isMath;
 
-var stringify = function stringify(x) {
+var _stringify = function stringify(x) {
   var ch = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '"';
   return ch + x + ch;
 };
 
-exports.stringify = stringify;
+exports.stringify = _stringify;
 
 var toggleCase = function toggleCase(x) {
   var result = '';
@@ -229,6 +233,51 @@ var camelCase = function camelCase(x) {
 };
 
 exports.camelCase = camelCase;
+
+var _capitalize = function capitalize(str) {
+  var result = str;
+
+  if ((0, _locustjsBase.isSomeString)(str)) {
+    var arr = [];
+    var inWord = false;
+
+    var _iterator = _createForOfIteratorHelper(str),
+        _step;
+
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var ch = _step.value;
+
+        if (isAlpha(ch)) {
+          if (!inWord) {
+            inWord = true;
+
+            if (isLower(ch)) {
+              arr.push(ch.toUpperCase());
+            } else {
+              arr.push(ch);
+            }
+          } else {
+            arr.push(ch);
+          }
+        } else {
+          arr.push(ch);
+          inWord = false;
+        }
+      }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
+
+    result = arr.join('');
+  }
+
+  return result;
+};
+
+exports.capitalize = _capitalize;
 var isLetter = isAlpha;
 exports.isLetter = isLetter;
 
@@ -245,7 +294,7 @@ var right = function right(x, n) {
 exports.right = right;
 var stringTransforms = {
   'free': function free(x) {
-    return x;
+    return x.trim();
   },
   'trim': function trim(x) {
     return x.trim();
@@ -265,17 +314,32 @@ var stringTransforms = {
   'camel': function camel(x) {
     return camelCase(x);
   },
+  'camelcase': function camelcase(x) {
+    return camelCase(x);
+  },
   'pascal': function pascal(x) {
     return pascalCase(x);
+  },
+  'pascalcase': function pascalcase(x) {
+    return pascalCase(x);
+  },
+  'toggle': function toggle(x) {
+    return toggleCase(x);
+  },
+  'togglecase': function togglecase(x) {
+    return toggleCase(x);
+  },
+  'capitalize': function capitalize(x) {
+    return _capitalize(x);
   },
   'reverse': function reverse(x) {
     return _reverse(x);
   },
+  'stringify': function stringify(x) {
+    return _stringify(x);
+  },
   'unstring': function unstring(x) {
     return unString(x);
-  },
-  'togglecase': function togglecase(x) {
-    return toggleCase(x);
   },
   isValid: function isValid(transform) {
     return (0, _locustjsBase.isFunction)(this[transform]);
@@ -283,12 +347,17 @@ var stringTransforms = {
 };
 exports.stringTransforms = stringTransforms;
 
-var _singleTransform = function _singleTransform(str, type) {
+var _singleTransform = function _singleTransform(str, transformType) {
   var result = str;
-  var t = stringTransforms[type];
 
-  if (t != undefined) {
-    result = t(str);
+  if ((0, _locustjsBase.isFunction)(transformType)) {
+    result = transformType(str);
+  } else {
+    var transform = stringTransforms[transformType];
+
+    if (transform != undefined) {
+      result = transform(str);
+    }
   }
 
   return result;
@@ -296,169 +365,197 @@ var _singleTransform = function _singleTransform(str, type) {
 
 var _transform = function _transform(str, transArray) {
   var result = str;
-  transArray.forEach(function (type) {
-    result = _singleTransform(result, type);
+  transArray.forEach(function (transformType) {
+    result = _singleTransform(result, transformType);
   });
   return result;
 };
 
-var tsplit = function tsplit(str, separator, transforms) {
+var transplit = function transplit(str, separator) {
   var result = [];
-  var arr = str.split(separator);
-  var i = 0;
-  var _transforms = [];
 
-  if ((0, _locustjsBase.isArray)(transforms)) {
-    _transforms = transforms;
-  } else if (SplitOptions.isValid(transforms)) {
-    transforms = SplitOptions.getNumber(transforms);
+  if ((0, _locustjsBase.isSomeString)(str)) {
+    var _transforms = [];
+    var _finalTransforms = [];
 
-    switch (transforms) {
-      case removeEmpties:
-        _transforms = ['free'];
-        break;
-
-      case trim:
-        _transforms = ['trim'];
-        break;
-
-      case trimAndRemoveEmpties:
-        _transforms = ['trim', 'free'];
-        break;
-
-      case toLower:
-        _transforms = ['lower'];
-        break;
-
-      case trimToLowerAndRemoveEmpties:
-        _transforms = ['trim', 'lower', 'free'];
-        break;
-
-      case toUpper:
-        _transforms = ['upper'];
-        break;
-
-      case trimToUpperAndRemoveEmpties:
-        _transforms = ['trim', 'upper', 'free'];
-        break;
+    for (var _len = arguments.length, transforms = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      transforms[_key - 2] = arguments[_key];
     }
-  } else if ((0, _locustjsBase.isSomeString)(transforms)) {
-    _transforms = transforms.split(',');
-  }
 
-  while (i < arr.length) {
-    var _item = void 0;
+    for (var _i = 0, _transforms2 = transforms; _i < _transforms2.length; _i++) {
+      var item = _transforms2[_i];
 
-    var item = arr[i++];
+      if ((0, _locustjsBase.isArray)(item)) {
+        var _iterator2 = _createForOfIteratorHelper(item),
+            _step2;
 
-    if (_transforms.length) {
-      item = _transform(item, _transforms);
+        try {
+          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+            var subItem = _step2.value;
 
-      if (_transforms[_transforms.length - 1] == 'free' && item.length == 0) {
-        continue;
-      }
-
-      result.push(item);
-    }
-  }
-
-  return result;
-};
-
-exports.tsplit = tsplit;
-
-var nsplit = function nsplit(str) {
-  for (var _len = arguments.length, rest = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    rest[_key - 1] = arguments[_key];
-  }
-
-  var result = [];
-  var _transforms = [];
-  var transforms = rest.length ? rest[rest.length - 1] : null;
-  var separators = [];
-
-  if ((0, _locustjsBase.isArray)(transforms)) {
-    _transforms = transforms;
-  } else if ((0, _locustjsBase.isSomeString)(transforms) && stringTransforms.isValid(transforms)) {
-    _transforms = transforms.split(',');
-  } else if (SplitOptions.isValid(transforms)) {
-    transforms = SplitOptions.getNumber(transforms);
-
-    switch (transforms) {
-      case removeEmpties:
-        _transforms = ['free'];
-        break;
-
-      case trim:
-        _transforms = ['trim'];
-        break;
-
-      case trimAndRemoveEmpties:
-        _transforms = ['trim', 'free'];
-        break;
-
-      case toLower:
-        _transforms = ['lower'];
-        break;
-
-      case trimToLowerAndRemoveEmpties:
-        _transforms = ['trim', 'lower', 'free'];
-        break;
-
-      case toUpper:
-        _transforms = ['upper'];
-        break;
-
-      case trimToUpperAndRemoveEmpties:
-        _transforms = ['trim', 'upper', 'free'];
-        break;
-    }
-  }
-
-  if (!isEmpty(transforms)) {
-    separators = rest.slice(0, rest.length - 1);
-  }
-
-  if (arguments.length > 0) {
-    var splitStringArray = function splitStringArray(arr, separators, options, i) {
-      var _result = [];
-
-      if (i < separatorsCount) {
-        w.Locust.eachKey(arr, function (index) {
-          if (typeof arr[index] == "string") {
-            var tempArr = arr[index].splitString(separators[i], options);
-            var tempItem = splitStringArray(tempArr, separators, options, i + 1);
-
-            _result.push(tempItem);
+            _transforms.push(subItem);
           }
-        });
-      } else {
-        _result = arr;
-      }
+        } catch (err) {
+          _iterator2.e(err);
+        } finally {
+          _iterator2.f();
+        }
+      } else if ((0, _locustjsBase.isSomeString)(item)) {
+        if (item.indexOf(',') >= 0) {
+          var temp = transplit(item, ',', SplitOptions.trimToLowerAndRemoveEmpties);
 
-      return _result;
-    };
+          var _iterator3 = _createForOfIteratorHelper(temp),
+              _step3;
 
-    var splitOptions = SplitOptions.none;
-    var separatorsCount = arguments.length;
+          try {
+            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+              var _subItem = _step3.value;
 
-    if (arguments.length > 1) {
-      splitOptions = arguments[arguments.length - 1];
-
-      if (splitOptions == SplitOptions.removeEmpties || splitOptions == SplitOptions.trim || splitOptions == SplitOptions.trimAndRemoveEmpties || splitOptions == SplitOptions.toLower || splitOptions == SplitOptions.trimToLowerAndRemoveEmpties || splitOptions == SplitOptions.toUpper || splitOptions == SplitOptions.trimToUpperAndRemoveEmpties) {
-        separatorsCount--;
-      } else {
-        splitOptions = SplitOptions.none;
+              _transforms.push(_subItem);
+            }
+          } catch (err) {
+            _iterator3.e(err);
+          } finally {
+            _iterator3.f();
+          }
+        } else {
+          _transforms.push(item.trim().toLowerCase());
+        }
+      } else if ((0, _locustjsBase.isNumeric)(item)) {
+        _transforms.push(item);
+      } else if ((0, _locustjsBase.isFunction)(item)) {
+        _transforms.push(item);
       }
     }
 
-    result = splitStringArray([str.toString()], arguments, splitOptions, 0)[0];
+    for (var _i2 = 0, _transforms3 = _transforms; _i2 < _transforms3.length; _i2++) {
+      var transform = _transforms3[_i2];
+
+      if (SplitOptions.isValid(transform)) {
+        var transformValue = SplitOptions.getNumber(transform);
+
+        switch (transformValue) {
+          case SplitOptions.removeEmpties:
+            _finalTransforms.push('free');
+
+            break;
+
+          case SplitOptions.trim:
+            _finalTransforms.push('trim');
+
+            break;
+
+          case SplitOptions.trimAndRemoveEmpties:
+            _finalTransforms.push('trim');
+
+            _finalTransforms.push('free');
+
+            break;
+
+          case SplitOptions.toLower:
+            _finalTransforms.push('lower');
+
+            break;
+
+          case SplitOptions.trimToLowerAndRemoveEmpties:
+            _finalTransforms.push('trim');
+
+            _finalTransforms.push('lower');
+
+            _finalTransforms.push('free');
+
+            break;
+
+          case SplitOptions.toUpper:
+            _finalTransforms.push('upper');
+
+            break;
+
+          case SplitOptions.trimToUpperAndRemoveEmpties:
+            _finalTransforms.push('trim');
+
+            _finalTransforms.push('upper');
+
+            _finalTransforms.push('free');
+
+            break;
+        }
+      } else {
+        _finalTransforms.push(transform);
+      }
+    }
+
+    var arr = str.split(separator);
+
+    if (_finalTransforms.length) {
+      var i = 0;
+
+      while (i < arr.length) {
+        var _item = arr[i++];
+        _item = _transform(_item, _finalTransforms);
+
+        if (_finalTransforms[_finalTransforms.length - 1] == 'free' && (!_item || _item.length == 0)) {
+          continue;
+        }
+
+        result.push(_item);
+      }
+    } else {
+      result = arr;
+    }
   }
 
   return result;
 };
 
-exports.nsplit = nsplit;
+exports.transplit = transplit;
+
+var nestedSplit = function nestedSplit(str) {
+  var result = [];
+
+  for (var _len2 = arguments.length, rest = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+    rest[_key2 - 1] = arguments[_key2];
+  }
+
+  var separators = rest;
+  var transforms = null;
+
+  if (rest.length > 1) {
+    transforms = rest[rest.length - 1];
+
+    if ((0, _locustjsBase.isSomeString)(transforms) && transforms != ',' && transforms.indexOf(',') >= 0 || (0, _locustjsBase.isArray)(transforms)) {
+      separators = rest.slice(0, rest.length - 1);
+    } else {
+      transforms = null;
+    }
+  }
+
+  separators = separators.flat();
+
+  function splitStringArray(arr, i) {
+    var _result = [];
+
+    if (i < separators.length) {
+      for (var index in arr) {
+        if ((0, _locustjsBase.isString)(arr[index])) {
+          var tempArr = transplit(arr[index], separators[i], transforms);
+          var tempItem = splitStringArray(tempArr, i + 1);
+
+          _result.push(tempItem);
+        }
+      }
+    } else {
+      _result = arr;
+    }
+
+    return _result;
+  }
+
+  result = splitStringArray([str], 0)[0];
+  return result;
+};
+
+exports.nestedSplit = nestedSplit;
 
 var format = function format() {
   var s = arguments.length ? arguments[0] : '';
@@ -480,7 +577,7 @@ var format = function format() {
         pv = '';
       }
 
-      if (_typeof(pv) == 'object' && pv) {
+      if ((0, _locustjsBase.isObject)(pv)) {
         formatWithObject(prefix + key + '.', pv);
       } else {
         s = replaceAll(s, '{' + prefix + key + '}', pv);
@@ -493,13 +590,13 @@ var format = function format() {
       var values = _args[0];
 
       if ((0, _locustjsBase.isArray)(values)) {
-        var _i = 0;
+        var _i3 = 0;
         values.forEach(function (value) {
           var v = value == null ? '' : value;
-          s = replaceAll(s, '{' + _i + '}', v);
-          _i++;
+          s = replaceAll(s, '{' + _i3 + '}', v);
+          _i3++;
         });
-      } else if (_typeof(values) == "object" && values != null) {
+      } else if ((0, _locustjsBase.isSomeObject)(values)) {
         (0, _locustjsBase.forEach)(values, function (args) {
           var key = args.key;
           var i = args.index;
@@ -643,8 +740,8 @@ function configureStringExtensions(options) {
 
   if (!String.prototype.format || (0, _locustjsExtensionsOptions.shouldExtend)('format', _options)) {
     String.prototype.format = function () {
-      for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
+      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+        args[_key3] = arguments[_key3];
       }
 
       format.apply(void 0, [this].concat(args));
@@ -747,13 +844,13 @@ function configureStringExtensions(options) {
     };
   }
 
-  if (!String.prototype.tsplit || (0, _locustjsExtensionsOptions.shouldExtend)('tsplit', _options)) {
-    String.prototype.tsplit = function (separator, transforms) {
-      return tsplit(this, separator, transforms);
+  if (!String.prototype.transplit || (0, _locustjsExtensionsOptions.shouldExtend)('transplit', _options)) {
+    String.prototype.transplit = function (separator, transforms) {
+      return transplit(this, separator, transforms);
     };
   }
 
-  if (!String.prototype.nsplit || (0, _locustjsExtensionsOptions.shouldExtend)('nsplit', _options)) {
+  if (!String.prototype.nestedSplit || (0, _locustjsExtensionsOptions.shouldExtend)('nestedSplit', _options)) {
     /* examples
     	input: "a=1&b=ali"
     	output:
@@ -767,50 +864,16 @@ function configureStringExtensions(options) {
     		[
     			[ ["a",1],["b", "ali"] ],
     			[ ["a",2],["b", "reza"],["c", true] ],
-    			[ ["a",3],["b"],["c", false] ],
+    			[ ["a",3],["b", "" ],["c", false] ],
     			[ ["b", "saeed"],["c", true] ]
     		]
     */
-    String.prototype.nsplit = function () {
-      var result = [];
-
-      if (arguments.length > 0) {
-        var splitStringArray = function splitStringArray(arr, separators, options, i) {
-          var _result = [];
-
-          if (i < separatorsCount) {
-            w.Locust.eachKey(arr, function (index) {
-              if (typeof arr[index] == "string") {
-                var tempArr = arr[index].splitString(separators[i], options);
-                var tempItem = splitStringArray(tempArr, separators, options, i + 1);
-
-                _result.push(tempItem);
-              }
-            });
-          } else {
-            _result = arr;
-          }
-
-          return _result;
-        };
-
-        var splitOptions = SplitOptions.none;
-        var separatorsCount = arguments.length;
-
-        if (arguments.length > 1) {
-          splitOptions = arguments[arguments.length - 1];
-
-          if (splitOptions == SplitOptions.removeEmpties || splitOptions == SplitOptions.trim || splitOptions == SplitOptions.trimAndRemoveEmpties || splitOptions == SplitOptions.toLower || splitOptions == SplitOptions.trimToLowerAndRemoveEmpties || splitOptions == SplitOptions.toUpper || splitOptions == SplitOptions.trimToUpperAndRemoveEmpties) {
-            separatorsCount--;
-          } else {
-            splitOptions = SplitOptions.none;
-          }
-        }
-
-        result = splitStringArray([this.toString()], arguments, splitOptions, 0)[0];
+    String.prototype.nestedSplit = function () {
+      for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+        args[_key4] = arguments[_key4];
       }
 
-      return result;
+      return nestedSplit.apply(void 0, [this].concat(args));
     };
   }
 
@@ -823,6 +886,12 @@ function configureStringExtensions(options) {
   if (!String.prototype.camelCase || (0, _locustjsExtensionsOptions.shouldExtend)('camelcase', _options)) {
     String.prototype.camelCase = function () {
       return camelCase(this);
+    };
+  }
+
+  if (!String.prototype.capitalize || (0, _locustjsExtensionsOptions.shouldExtend)('capitalize', _options)) {
+    String.prototype.capitalize = function () {
+      return _capitalize(this);
     };
   }
 }

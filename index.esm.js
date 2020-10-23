@@ -97,31 +97,72 @@ const camelCase   = (x) => isSomeString(x) ? x.match(/[a-z]+/gi)
 											.map((word, i) => (i == 0 ? word.charAt(0).toLowerCase(): word.charAt(0).toUpperCase()) + word.substr(1))
 											.join('')
 									: '';
+const capitalize = function (str) {
+	let result = str;
+	
+	if (isSomeString(str)) {
+		let arr = [];
+		let inWord = false;
+		
+		for (let ch of str) {
+			if (isAlpha(ch)) {
+				if (!inWord) {
+					inWord = true;
+					
+					if (isLower(ch)) {
+						arr.push(ch.toUpperCase());
+					} else {
+						arr.push(ch);
+					}
+				} else {
+					arr.push(ch);
+				}
+			} else {
+				arr.push(ch);
+				inWord = false;
+			}
+		}
+		
+		result = arr.join('');
+	}
+	
+	return result;
+}
 const isLetter		= isAlpha;
 const left			= (x, n) => isSomeString(x) ? x.substr(0, n): '';
 const right			= (x, n) => isSomeString(x) ? (x.length > n ? x.substr(x.length - n, n): x) : '';
 const stringTransforms = {
-	'free': (x) => x,
+	'free': (x) => x.trim(),
 	'trim': (x) => x.trim(),
 	'ltrim': (x) => ltrim(x),
 	'rtrim': (x) => rtrim(x),
 	'upper': (x) => x.toUpperCase(),
 	'lower': (x) => x.toLowerCase(),
 	'camel': (x) => camelCase(x),
+	'camelcase': (x) => camelCase(x),
 	'pascal': (x) => pascalCase(x),
-	'reverse': (x) => reverse(x),
-	'unstring': (x) => unString(x),
+	'pascalcase': (x) => pascalCase(x),
+	'toggle': (x) => toggleCase(x),
 	'togglecase': (x) => toggleCase(x),
+	'capitalize': (x) => capitalize(x),
+	'reverse': (x) => reverse(x),
+	'stringify': (x) => stringify(x),
+	'unstring': (x) => unString(x),
 	isValid: function (transform) {
 		return isFunction(this[transform])
 	}
 }
-const _singleTransform = function (str, type) {
+const _singleTransform = function (str, transformType) {
 	let result = str;
-	const t = stringTransforms[type];
 	
-	if (t != undefined) {
-		result = t(str);
+	if (isFunction(transformType)) {
+		result = transformType(str);
+	} else {
+		const transform = stringTransforms[transformType];
+		
+		if (transform != undefined) {
+			result = transform(str);
+		}
 	}
 	
 	return result;
@@ -129,121 +170,138 @@ const _singleTransform = function (str, type) {
 const _transform = function (str, transArray) {
 	let result = str;
 	
-	transArray.forEach(type => {
-		result = _singleTransform(result, type)
+	transArray.forEach(transformType => {
+		result = _singleTransform(result, transformType)
 	});
 	
 	return result;
 }
-const tsplit		= function (str, separator, transforms) {
+const transplit = function (str, separator, ...transforms) {
 	let result = [];
-	let arr = str.split(separator);
-	let i = 0;
-	let _transforms = [];
 	
-	if (isArray(transforms)) {
-		_transforms = transforms
-	} else if (SplitOptions.isValid(transforms)) {
-		transforms = SplitOptions.getNumber(transforms);
+	if (isSomeString(str)) {
+		let _transforms = [];
+		let _finalTransforms = [];
 		
-		switch (transforms) {
-			case removeEmpties			 	: _transforms = ['free']; break;
-			case trim					 	: _transforms = ['trim']; break;
-			case trimAndRemoveEmpties		: _transforms = ['trim', 'free']; break;
-			case toLower					: _transforms = ['lower']; break;
-			case trimToLowerAndRemoveEmpties: _transforms = ['trim', 'lower', 'free']; break;
-			case toUpper					: _transforms = ['upper']; break;
-			case trimToUpperAndRemoveEmpties: _transforms = ['trim', 'upper', 'free']; break;
-		}
-	} else if (isSomeString(transforms)) {
-		_transforms = transforms.split(',')
-	}
-	
-	while (i < arr.length) {
-		let _item;
-		let item = arr[i++];
-		
-		if (_transforms.length) {
-			item = _transform(item, _transforms);
-			
-			if (_transforms[_transforms.length - 1] == 'free' && item.length == 0) {
-				continue;
+		for (let item of transforms) {
+			if (isArray(item)) {
+				for (let subItem of item) {
+					_transforms.push(subItem);
+				}
+			} else if (isSomeString(item)) {
+				if (item.indexOf(',') >= 0) {
+					let temp = transplit(item, ',', SplitOptions.trimToLowerAndRemoveEmpties);
+					
+					for (let subItem of temp) {
+						_transforms.push(subItem);
+					}
+				} else {
+					_transforms.push(item.trim().toLowerCase());
+				}
+			} else if (isNumeric(item)) {
+				_transforms.push(item);
+			} else if (isFunction(item)) {
+				_transforms.push(item);
 			}
+		}
+		
+		for (let transform of _transforms) {
+			if (SplitOptions.isValid(transform)) {
+				const transformValue = SplitOptions.getNumber(transform);
+					
+				switch (transformValue) {
+					case SplitOptions.removeEmpties:
+						_finalTransforms.push('free');
+						break;
+					case SplitOptions.trim:
+						_finalTransforms.push('trim');
+						break;
+					case SplitOptions.trimAndRemoveEmpties:
+						_finalTransforms.push('trim');
+						_finalTransforms.push('free');
+						break;
+					case SplitOptions.toLower:
+						_finalTransforms.push('lower');
+						break;
+					case SplitOptions.trimToLowerAndRemoveEmpties:
+						_finalTransforms.push('trim');
+						_finalTransforms.push('lower');
+						_finalTransforms.push('free');
+						break;
+					case SplitOptions.toUpper:
+						_finalTransforms.push('upper');
+						break;
+					case SplitOptions.trimToUpperAndRemoveEmpties:
+						_finalTransforms.push('trim');
+						_finalTransforms.push('upper');
+						_finalTransforms.push('free');
+						break;
+				}
+			} else {
+				_finalTransforms.push(transform);
+			}
+		}
+		
+		let arr = str.split(separator);
+		
+		if (_finalTransforms.length) {
+			let i = 0;
 			
-			result.push(item)
+			while (i < arr.length) {
+				let item = arr[i++];
+				
+				item = _transform(item, _finalTransforms);
+				
+				if (_finalTransforms[_finalTransforms.length - 1] == 'free' && (!item || item.length == 0)) {
+					continue;
+				}
+				
+				result.push(item)
+			}
+		} else {
+			result = arr;
 		}
 	}
 	
 	return result;
 }
-const nsplit = function (str, ...rest) {
+const nestedSplit = function (str, ...rest) {
 	let result = [];
-	let _transforms = [];
-	let transforms = rest.length ? rest[rest.length - 1]: null;
-	let separators = [];
+	let separators = rest;
+	let transforms = null;
 	
-	if (isArray(transforms)) {
-		_transforms = transforms
-	} else if (isSomeString(transforms) && stringTransforms.isValid(transforms)) {
-		_transforms = transforms.split(',')
-	} else if (SplitOptions.isValid(transforms)) {
-		transforms = SplitOptions.getNumber(transforms);
+	if (rest.length > 1) {
+		transforms = rest[rest.length - 1];
 		
-		switch (transforms) {
-			case removeEmpties				 : _transforms = ['free']; break;
-			case trim					 : _transforms = ['trim']; break;
-			case trimAndRemoveEmpties		 : _transforms = ['trim', 'free']; break;
-			case toLower					 : _transforms = ['lower']; break;
-			case trimToLowerAndRemoveEmpties: _transforms = ['trim', 'lower', 'free']; break;
-			case toUpper					 : _transforms = ['upper']; break;
-			case trimToUpperAndRemoveEmpties: _transforms = ['trim', 'upper', 'free']; break;
+		if ((isSomeString(transforms) && transforms != ',' && transforms.indexOf(',') >= 0) || isArray(transforms)) {
+			separators = rest.slice(0, rest.length - 1);
+		} else {
+			transforms = null;
 		}
 	}
 	
-	if (!isEmpty(transforms)) {
-		separators = rest.slice(0, rest.length - 1)
-	}
+	separators = separators.flat();
 	
-	if (arguments.length > 0) {
-		var splitOptions = SplitOptions.none;
-		var separatorsCount = arguments.length;
+	function splitStringArray(arr, i) {
+		var _result = [];
 		
-		if (arguments.length > 1) {
-			splitOptions = arguments[arguments.length - 1];
-			if (splitOptions == SplitOptions.removeEmpties ||
-				splitOptions == SplitOptions.trim ||
-				splitOptions == SplitOptions.trimAndRemoveEmpties ||
-				splitOptions == SplitOptions.toLower ||
-				splitOptions == SplitOptions.trimToLowerAndRemoveEmpties ||
-				splitOptions == SplitOptions.toUpper ||
-				splitOptions == SplitOptions.trimToUpperAndRemoveEmpties) {
-				separatorsCount--;
-			} else {
-			  splitOptions = SplitOptions.none;
+		if (i < separators.length) {
+			for (let index in arr) {
+				if (isString(arr[index])) {
+					var tempArr = transplit(arr[index], separators[i], transforms);
+					var tempItem = splitStringArray(tempArr, i + 1);
+					
+					_result.push(tempItem);
+				}
 			}
+		} else {
+			_result = arr;
 		}
 		
-		function splitStringArray(arr, separators, options, i) {
-			var _result = [];
-			
-			if (i < separatorsCount) {
-				w.Locust.eachKey(arr, function(index) {
-					if (typeof arr[index] == "string") {
-						var tempArr = arr[index].splitString(separators[i], options);
-						var tempItem = splitStringArray(tempArr, separators, options, i + 1);
-						
-						_result.push(tempItem);
-					}
-				});
-			} else {
-				_result = arr;
-			}
-			
-			return _result;
-		}
-		
-		result = splitStringArray([str.toString()], arguments, splitOptions, 0)[0];
+		return _result;
 	}
+	
+	result = splitStringArray([str], 0)[0];
 	
 	return result;
 }
@@ -265,7 +323,7 @@ const format		= function () {
 				pv = '';
 			}
 
-			if (typeof pv == 'object' && pv) {
+			if (isObject(pv)) {
 				formatWithObject(prefix + key + '.', pv);
 			} else {
 				s = replaceAll(s, '{' + prefix + key + '}', pv);
@@ -286,7 +344,7 @@ const format		= function () {
 					s = replaceAll(s, '{' + i + '}', v);
 					i++;
 				})
-			} else if (typeof values == "object" && values != null) {
+			} else if (isSomeObject(values)) {
 				forEach(values, function (args) {
 					let key = args.key;
 					let i = args.index;
@@ -529,13 +587,13 @@ function configureStringExtensions(options) {
 		}
 	}
 
-	if (!String.prototype.tsplit || shouldExtend('tsplit', _options)) {
-		String.prototype.tsplit = function (separator, transforms) {
-			return tsplit(this, separator, transforms)
+	if (!String.prototype.transplit || shouldExtend('transplit', _options)) {
+		String.prototype.transplit = function (separator, transforms) {
+			return transplit(this, separator, transforms)
 		}
 	}
 
-	if (!String.prototype.nsplit || shouldExtend('nsplit', _options)) {
+	if (!String.prototype.nestedSplit || shouldExtend('nestedSplit', _options)) {
 		/* examples
 			input: "a=1&b=ali"
 			output:
@@ -549,55 +607,12 @@ function configureStringExtensions(options) {
 				[
 					[ ["a",1],["b", "ali"] ],
 					[ ["a",2],["b", "reza"],["c", true] ],
-					[ ["a",3],["b"],["c", false] ],
+					[ ["a",3],["b", "" ],["c", false] ],
 					[ ["b", "saeed"],["c", true] ]
 				]
 		*/
-		String.prototype.nsplit = function () {
-			var result = [];
-			
-			if (arguments.length > 0) {
-				var splitOptions = SplitOptions.none;
-				var separatorsCount = arguments.length;
-				
-				if (arguments.length > 1) {
-					splitOptions = arguments[arguments.length - 1];
-					if (splitOptions == SplitOptions.removeEmpties ||
-						splitOptions == SplitOptions.trim ||
-						splitOptions == SplitOptions.trimAndRemoveEmpties ||
-						splitOptions == SplitOptions.toLower ||
-						splitOptions == SplitOptions.trimToLowerAndRemoveEmpties ||
-						splitOptions == SplitOptions.toUpper ||
-						splitOptions == SplitOptions.trimToUpperAndRemoveEmpties) {
-						separatorsCount--;
-					} else {
-					  splitOptions = SplitOptions.none;
-					}
-				}
-				
-				function splitStringArray(arr, separators, options, i) {
-					var _result = [];
-					
-					if (i < separatorsCount) {
-						w.Locust.eachKey(arr, function(index) {
-							if (typeof arr[index] == "string") {
-								var tempArr = arr[index].splitString(separators[i], options);
-								var tempItem = splitStringArray(tempArr, separators, options, i + 1);
-								
-								_result.push(tempItem);
-							}
-						});
-					} else {
-						_result = arr;
-					}
-					
-					return _result;
-				}
-				
-				result = splitStringArray([this.toString()], arguments, splitOptions, 0)[0];
-			}
-			
-			return result;
+		String.prototype.nestedSplit = function (...args) {
+			return nestedSplit(this, ...args)
 		}
 	}
 	
@@ -610,6 +625,12 @@ function configureStringExtensions(options) {
 	if (!String.prototype.camelCase || shouldExtend('camelcase', _options)) {
 		String.prototype.camelCase = function () {
 			return camelCase(this);
+		}
+	}
+	
+	if (!String.prototype.capitalize || shouldExtend('capitalize', _options)) {
+		String.prototype.capitalize = function () {
+			return capitalize(this);
 		}
 	}
 }
@@ -639,15 +660,16 @@ export {
 	isWhitespace	    ,
 	isMath		        ,
 	stringify		    ,
-	toggleCase		        ,
+	toggleCase		    ,
 	unString            ,
 	pascalCase          ,
 	camelCase           ,
+	capitalize			,
 	isLetter            ,
 	left                ,
 	right               ,
 	stringTransforms    ,
 	format              ,
-	tsplit              ,
-	nsplit
+	transplit           ,
+	nestedSplit
 }
