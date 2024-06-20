@@ -1,11 +1,12 @@
 {
-  "name": "locustjs-extensions-string",
-  "version": "1.0.2",
+  "name": "@locustjs/extensions-string",
+  "version": "2.0.0",
   "description": "This library contains extension methods for string",
   "main": "index.cjs.js",
   "module": "index.esm.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "babel index.esm.js -o index.cjs.js",
+    "test": "node -r esm ./tests/index.js"
   },
   "repository": {
     "type": "git",
@@ -21,9 +22,17 @@
     "url": "https://github.com/ironcodev/locustjs-extensions-string/issues"
   },
   "homepage": "https://github.com/ironcodev/locustjs-extensions-string#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "@locustjs/test": "^1.4.0",
+    "esm": "^3.2.25"
+  },
   "dependencies": {
-    "locustjs-base": "^1.0.4",
-    "locustjs-enum": "^1.0.1",
-    "locustjs-extensions-options": "^1.0.5"
+    "@locustjs/base": "^3.0.1",
+    "@locustjs/enum": "^2.0.0",
+    "@locustjs/extensions-options": "^2.1.0",
+    "@locustjs/htmlencode": "^1.0.0"
   }
 }

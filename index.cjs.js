@@ -1,25 +1,8 @@
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.nestedSplit = exports.transplit = exports.format = exports.stringTransforms = exports.right = exports.left = exports.isLetter = exports.capitalize = exports.camelCase = exports.pascalCase = exports.unString = exports.toggleCase = exports.stringify = exports.isMath = exports.isWhitespace = exports.isComparison = exports.isBitwise = exports.isLogic = exports.isArithmatic = exports.isWord = exports.isAlphaNum = exports.isDigit = exports.isUpper = exports.isLower = exports.isAlpha = exports.isControl = exports.isPunctuation = exports.isChar = exports.Chars = exports.toBytes = exports.rtrim = exports.ltrim = exports.reverse = exports.replaceAll = exports.SplitOptions = exports.default = void 0;
-
-var _locustjsBase = require("locustjs-base");
-
-var _locustjsEnum = _interopRequireDefault(require("locustjs-enum"));
-
-var _locustjsExtensionsOptions = require("locustjs-extensions-options");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it; if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = o[Symbol.iterator](); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-var SplitOptions = _locustjsEnum.default.define({
+import { isArray, isString, isSomeString, isNumeric, isFunction, isSomeArray, queryObject } from "@locustjs/base";
+import Enum from "@locustjs/enum";
+import ExtensionHelper from "@locustjs/extensions-options";
+import { htmlEncode, htmlDecode } from "@locustjs/htmlencode";
+const SplitOptions = Enum.define({
   none: 0,
   removeEmpties: 1,
   trim: 2,
@@ -28,873 +11,588 @@ var SplitOptions = _locustjsEnum.default.define({
   trimToLowerAndRemoveEmpties: 5,
   toUpper: 6,
   trimToUpperAndRemoveEmpties: 7
-}, 'SplitOptions');
-
-exports.SplitOptions = SplitOptions;
-
-var replaceAll = function replaceAll(source, find, replace) {
-  return source.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g'), replace);
-};
-
-exports.replaceAll = replaceAll;
-
-var _reverse = function reverse(x) {
-  return (0, _locustjsBase.isSomeString)(x) ? x.split('').reverse().join('') : '';
-};
-
-exports.reverse = _reverse;
-
-var _ltrim = function ltrim(x) {
-  return (0, _locustjsBase.isSomeString)(x) ? x.trimLeft() : '';
-};
-
-exports.ltrim = _ltrim;
-
-var _rtrim = function rtrim(x) {
-  return (0, _locustjsBase.isSomeString)(x) ? x.trimRight() : '';
-};
-
-exports.rtrim = _rtrim;
-
-var toBytes = function toBytes(x) {
-  var data = [];
-
-  if ((0, _locustjsBase.isSomeString)(x)) {
-    for (var i = 0; i < x.length; i++) {
-      data.push(x.charCodeAt(i));
+}, "SplitOptions");
+const utf8Encoder = new TextEncoder();
+const utf8Decoder = new TextDecoder();
+class StringBuilder {
+  constructor(bufferSize) {
+    this.bufferSize = isNumeric(bufferSize) ? parseInt(bufferSize) || 32 : 32;
+    this._buffer = new Array(this.bufferSize);
+    this._index = 0;
+    this._length = 0;
+  }
+  append(x) {
+    this._buffer[this._index] = isSomeString(x) ? x : isFunction(x.toString) ? x.toString() : "";
+    this._length += this._buffer[this._index].length;
+    this._index++;
+    if (this._index == this.bufferSize) {
+      this._buffer.splice(this.bufferSize, ...new Array(this.bufferSize));
     }
   }
-
-  return data;
+  get length() {
+    return this._length;
+  }
+  toString() {
+    const result = this._buffer.join("");
+    this._buffer = new Array(this.bufferSize);
+    this._index = 0;
+    this._length = 0;
+    return result;
+  }
+}
+const replaceAll = (source, find, replace) => source.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "g"), replace);
+const reverse = x => isSomeString(x) ? x.split("").reverse().join("") : "";
+const ltrim = x => isSomeString(x) ? x.trimLeft() : "";
+const rtrim = x => isSomeString(x) ? x.trimRight() : "";
+const toBytes = x => isSomeString(x) ? utf8Encoder.encode(x) : new Uint8Array();
+const fromBytes = x => {
+  if (x instanceof Uint8Array) {
+    return utf8Decoder.decode(x);
+  } else if (isArray(x)) {
+    return utf8Decoder.decode(new Uint8Array(x));
+  } else {
+    return "";
+  }
 };
-
-exports.toBytes = toBytes;
-var Chars = {
-  punctuation: ['.', ',', ';', ':', '?', '!', '(', ')', '-', "'", '"', '/', '\\', '{', '}', '[', ']', '%', '#'],
-  control: ['~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|', '<', '>', '?', ':', '{', '}', '[', ']', ';', '"', "'", ',', '.', '/', '-', '=', '\\', '`'],
-  arithmatic: ['/', '\\', '+', '-', '(', ')', '%', '^', '*', '++', '--'],
-  logic: ['&&', '||', '!'],
-  bitwise: ['&', '|', '>>', '<<'],
-  comparison: ['==', '!=', '<>', '>', '<', '>=', '<=', '===', '!==']
-};
-exports.Chars = Chars;
-
-var isChar = function isChar(x) {
-  return (0, _locustjsBase.isString)(x) && x.length == 1;
-};
-
-exports.isChar = isChar;
-
-var isPunctuation = function isPunctuation(x) {
-  return (0, _locustjsBase.isSomeString)(x) && Chars.punctuation.indexOf(x) >= 0;
-};
-
-exports.isPunctuation = isPunctuation;
-
-var isControl = function isControl(x) {
-  return (0, _locustjsBase.isSomeString)(x) && Chars.control.indexOf(x) >= 0;
-};
-
-exports.isControl = isControl;
-
-var isAlpha = function isAlpha(x) {
-  return (0, _locustjsBase.isSomeString)(x) && x.match(/^[a-z]+$/i) !== null;
-};
-
-exports.isAlpha = isAlpha;
-
-var isLower = function isLower(x) {
-  return (0, _locustjsBase.isSomeString)(x) && x.match(/^[a-z]+$/) !== null;
-};
-
-exports.isLower = isLower;
-
-var isUpper = function isUpper(x) {
-  return (0, _locustjsBase.isSomeString)(x) && x.match(/^[A-Z]+$/) !== null;
-};
-
-exports.isUpper = isUpper;
-
-var isDigit = function isDigit(x) {
-  return (0, _locustjsBase.isSomeString)(x) && x.match(/^[0-9]+$/) !== null;
-};
-
-exports.isDigit = isDigit;
-
-var isAlphaNum = function isAlphaNum(x) {
-  return (0, _locustjsBase.isSomeString)(x) && x.match(/^[a-z0-9]+$/i) !== null;
-};
-
-exports.isAlphaNum = isAlphaNum;
-
-var isWord = function isWord(x) {
-  return (0, _locustjsBase.isSomeString)(x) && x.match(/^\w+$/i) !== null;
-};
-
-exports.isWord = isWord;
-
-var isArithmatic = function isArithmatic(x) {
-  return (0, _locustjsBase.isSomeString)(x) && Chars.arithmatic.indexOf(x) >= 0;
-};
-
-exports.isArithmatic = isArithmatic;
-
-var isLogic = function isLogic(x) {
-  return (0, _locustjsBase.isSomeString)(x) && Chars.logic.indexOf(x) >= 0;
-};
-
-exports.isLogic = isLogic;
-
-var isBitwise = function isBitwise(x) {
-  return (0, _locustjsBase.isSomeString)(x) && Chars.bitwise.indexOf(x) >= 0;
-};
-
-exports.isBitwise = isBitwise;
-
-var isComparison = function isComparison(x) {
-  return (0, _locustjsBase.isSomeString)(x) && Chars.comparison.indexOf(x) >= 0;
-};
-
-exports.isComparison = isComparison;
-
-var isWhitespace = function isWhitespace(x) {
-  return (0, _locustjsBase.isSomeString)(x) && x.match(/^\s+$/) !== null;
-};
-
-exports.isWhitespace = isWhitespace;
-
-var isMath = function isMath(x) {
-  return isArithmatic(x) || isLogic(x) || isBitwise(x) || isComparison(x);
-};
-
-exports.isMath = isMath;
-
-var _stringify = function stringify(x) {
-  var ch = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '"';
-  return ch + x + ch;
-};
-
-exports.stringify = _stringify;
-
-var toggleCase = function toggleCase(x) {
-  var result = '';
-
-  if ((0, _locustjsBase.isSomeString)(x)) {
-    for (var i = 0; i < x.length; i++) {
-      var code = x.charCodeAt(i);
-
-      if (code >= 65 && x <= 90) {
-        result += String.fromCharCode(code + 32);
-        continue;
-      }
-
-      if (code >= 97 && x <= 122) {
-        result += String.fromCharCode(code - 32);
-        continue;
-      }
+const toArray = x => {
+  let result = [];
+  if (isSomeString(x)) {
+    for (let i = 0; i < x.length; i++) {
+      result.push(x.charCodeAt(i));
     }
   }
-
   return result;
 };
-
-exports.toggleCase = toggleCase;
-
-var unString = function unString(x) {
-  var result = '';
-
-  if ((0, _locustjsBase.isSomeString)(x)) {
-    if (['"', "'", '`'].indexOf(x[0]) >= 0) {
+const fromArray = arr => {
+  const result = new StringBuilder();
+  if (isArray(arr)) {
+    for (let item of arr) {
+      if (isNumeric(item)) {
+        result.append(String.fromCharCode(item));
+      }
+    }
+  }
+  return result.toString();
+};
+const Chars = {
+  punctuation: [".", ",", ";", ":", "?", "!", "(", ")", "-", "'", '"', "/", "\\", "{", "}", "[", "]", "%", "#"],
+  control: ["~", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "|", "<", ">", "?", ":", "{", "}", "[", "]", ";", '"', "'", ",", ".", "/", "-", "=", "\\", "`"],
+  arithmatic: ["/", "\\", "+", "-", "(", ")", "%", "^", "*", "++", "--", "*=", "/=", "+=", "-="],
+  logic: ["&&", "||", "!", "&=", "|="],
+  bitwise: ["&", "|", ">>", "<<"],
+  comparison: ["==", "!=", "<>", ">", "<", ">=", "<=", "===", "!=="]
+};
+const isCharacter = x => isString(x) && x.length == 1;
+const isPunctuation = x => isSomeString(x) && Chars.punctuation.indexOf(x) >= 0;
+const isControl = x => isSomeString(x) && Chars.control.indexOf(x) >= 0;
+const isAlpha = x => isSomeString(x) && x.match(/^[a-z]+$/i) !== null;
+const isLower = x => isSomeString(x) && x.match(/^[a-z]+$/) !== null;
+const isUpper = x => isSomeString(x) && x.match(/^[A-Z]+$/) !== null;
+const isDigit = x => isSomeString(x) && x.match(/^[0-9]+$/) !== null;
+const isAlphaNum = x => isSomeString(x) && x.match(/^[a-z0-9]+$/i) !== null;
+const isWord = x => isSomeString(x) && x.match(/^\w+$/i) !== null;
+const isArithmatic = x => isSomeString(x) && Chars.arithmatic.indexOf(x) >= 0;
+const isLogic = x => isSomeString(x) && Chars.logic.indexOf(x) >= 0;
+const isBitwise = x => isSomeString(x) && Chars.bitwise.indexOf(x) >= 0;
+const isComparison = x => isSomeString(x) && Chars.comparison.indexOf(x) >= 0;
+const isWhitespace = x => isSomeString(x) && x.match(/^\s+$/) !== null;
+const isMath = x => isArithmatic(x) || isLogic(x) || isBitwise(x) || isComparison(x);
+const isLetter = isAlpha;
+const stringify = (x, ch = '"') => `${ch}${x}${ch}`;
+const unString = x => {
+  let result = "";
+  if (isSomeString(x)) {
+    if (['"', "'", "`"].indexOf(x[0]) >= 0) {
       result = x.substr(1);
     }
-
-    if (result.length && ['"', "'", '`'].indexOf(result[result.length - 1]) >= 0) {
+    if (result.length && ['"', "'", "`"].indexOf(result[result.length - 1]) >= 0) {
       result = result.substr(0, result.length - 1);
     }
   }
-
   return result;
 };
-
-exports.unString = unString;
-
-var pascalCase = function pascalCase(x) {
-  return (0, _locustjsBase.isSomeString)(x) ? x.match(/[a-z]+/gi).map(function (word) {
-    return word.charAt(0).toUpperCase() + word.substr(1);
-  }).join('') : '';
-};
-
-exports.pascalCase = pascalCase;
-
-var camelCase = function camelCase(x) {
-  return (0, _locustjsBase.isSomeString)(x) ? x.match(/[a-z]+/gi).map(function (word, i) {
-    return (i == 0 ? word.charAt(0).toLowerCase() : word.charAt(0).toUpperCase()) + word.substr(1);
-  }).join('') : '';
-};
-
-exports.camelCase = camelCase;
-
-var _capitalize = function capitalize(str) {
-  var result = str;
-
-  if ((0, _locustjsBase.isSomeString)(str)) {
-    var arr = [];
-    var inWord = false;
-
-    var _iterator = _createForOfIteratorHelper(str),
-        _step;
-
-    try {
-      for (_iterator.s(); !(_step = _iterator.n()).done;) {
-        var ch = _step.value;
-
-        if (isAlpha(ch)) {
-          if (!inWord) {
-            inWord = true;
-
-            if (isLower(ch)) {
-              arr.push(ch.toUpperCase());
-            } else {
-              arr.push(ch);
-            }
+const pascalCase = x => isSomeString(x) ? x.match(/[a-z]+/gi).map(word => word.charAt(0).toUpperCase() + word.substr(1)).join("") : "";
+const camelCase = x => isSomeString(x) ? x.match(/[a-z]+/gi).map((word, i) => (i == 0 ? word.charAt(0).toLowerCase() : word.charAt(0).toUpperCase()) + word.substr(1)).join("") : "";
+const capitalize = function (str) {
+  let result = str;
+  if (isSomeString(str)) {
+    let arr = [];
+    let inWord = false;
+    for (let ch of str) {
+      if (isAlpha(ch)) {
+        if (!inWord) {
+          inWord = true;
+          if (isLower(ch)) {
+            arr.push(ch.toUpperCase());
           } else {
             arr.push(ch);
           }
         } else {
           arr.push(ch);
-          inWord = false;
         }
+      } else {
+        arr.push(ch);
+        inWord = false;
       }
-    } catch (err) {
-      _iterator.e(err);
-    } finally {
-      _iterator.f();
     }
-
-    result = arr.join('');
+    result = arr.join("");
   }
-
   return result;
 };
-
-exports.capitalize = _capitalize;
-var isLetter = isAlpha;
-exports.isLetter = isLetter;
-
-var left = function left(x, n) {
-  return (0, _locustjsBase.isSomeString)(x) ? x.substr(0, n) : '';
+const toggleCase = x => {
+  const result = new StringBuilder();
+  if (isSomeString(x)) {
+    for (let i = 0; i < x.length; i++) {
+      let code = x.charCodeAt(i);
+      if (code >= 65 && code <= 90) {
+        result.append(String.fromCharCode(code + 32));
+      } else if (code >= 97 && code <= 122) {
+        result.append(String.fromCharCode(code - 32));
+      } else {
+        result.append(x[i]);
+      }
+    }
+  }
+  return result.toString();
 };
-
-exports.left = left;
-
-var right = function right(x, n) {
-  return (0, _locustjsBase.isSomeString)(x) ? x.length > n ? x.substr(x.length - n, n) : x : '';
-};
-
-exports.right = right;
-var stringTransforms = {
-  'free': function free(x) {
-    return x.trim();
-  },
-  'trim': function trim(x) {
-    return x.trim();
-  },
-  'ltrim': function ltrim(x) {
-    return _ltrim(x);
-  },
-  'rtrim': function rtrim(x) {
-    return _rtrim(x);
-  },
-  'upper': function upper(x) {
-    return x.toUpperCase();
-  },
-  'lower': function lower(x) {
-    return x.toLowerCase();
-  },
-  'camel': function camel(x) {
-    return camelCase(x);
-  },
-  'camelcase': function camelcase(x) {
-    return camelCase(x);
-  },
-  'pascal': function pascal(x) {
-    return pascalCase(x);
-  },
-  'pascalcase': function pascalcase(x) {
-    return pascalCase(x);
-  },
-  'toggle': function toggle(x) {
-    return toggleCase(x);
-  },
-  'togglecase': function togglecase(x) {
-    return toggleCase(x);
-  },
-  'capitalize': function capitalize(x) {
-    return _capitalize(x);
-  },
-  'reverse': function reverse(x) {
-    return _reverse(x);
-  },
-  'stringify': function stringify(x) {
-    return _stringify(x);
-  },
-  'unstring': function unstring(x) {
-    return unString(x);
-  },
-  isValid: function isValid(transform) {
-    return (0, _locustjsBase.isFunction)(this[transform]);
+const changeCase = toggleCase;
+const left = (x, n) => isSomeString(x) ? x.substr(0, n) : "";
+const right = (x, n) => isSomeString(x) ? x.length > n ? x.substr(x.length - n, n) : x : "";
+const StringTransformations = {
+  free: x => x.trim(),
+  trim: x => x.trim(),
+  ltrim: x => ltrim(x),
+  rtrim: x => rtrim(x),
+  upper: x => x.toUpperCase(),
+  lower: x => x.toLowerCase(),
+  camel: x => camelCase(x),
+  camelcase: x => camelCase(x),
+  pascal: x => pascalCase(x),
+  pascalcase: x => pascalCase(x),
+  toggle: x => toggleCase(x),
+  togglecase: x => toggleCase(x),
+  changecase: x => toggleCase(x),
+  capitalize: x => capitalize(x),
+  reverse: x => reverse(x),
+  stringify: x => stringify(x),
+  unstring: x => unString(x),
+  htmlencode: (x, ignoreList) => htmlEncode(x, ignoreList),
+  htmldecode: (x, ignoreList) => htmlDecode(x, ignoreList),
+  urlencode: (x, full) => full ? encodeURIComponent(x) : encodeURI(x),
+  urldecode: (x, full) => full ? decodeURIComponent(x) : decodeURI(x),
+  isValid: function (transform) {
+    return isFunction(this[transform]);
   }
 };
-exports.stringTransforms = stringTransforms;
-
-var _singleTransform = function _singleTransform(str, transformType) {
-  var result = str;
-
-  if ((0, _locustjsBase.isFunction)(transformType)) {
+StringTransformations.f = StringTransformations.free;
+StringTransformations.t = StringTransformations.trim;
+StringTransformations.lt = StringTransformations.ltrim;
+StringTransformations.rt = StringTransformations.rtrim;
+StringTransformations.u = StringTransformations.upper;
+StringTransformations.up = StringTransformations.upper;
+StringTransformations.l = StringTransformations.lower;
+StringTransformations.low = StringTransformations.lower;
+StringTransformations.c = StringTransformations.camel;
+StringTransformations.cam = StringTransformations.camel;
+StringTransformations.p = StringTransformations.pascal;
+StringTransformations.pas = StringTransformations.pascal;
+StringTransformations.cc = StringTransformations.changecase;
+StringTransformations.cap = StringTransformations.capitalize;
+StringTransformations.s = StringTransformations.stringify;
+StringTransformations.r = StringTransformations.reverse;
+StringTransformations.rev = StringTransformations.reverse;
+StringTransformations.un = StringTransformations.unstring;
+StringTransformations.he = StringTransformations.htmlencode;
+StringTransformations.hd = StringTransformations.htmldecode;
+StringTransformations.ue = StringTransformations.urlencode;
+StringTransformations.ud = StringTransformations.urldecode;
+const _singleTransform = function (str, transformType) {
+  let result = str;
+  if (isFunction(transformType)) {
     result = transformType(str);
   } else {
-    var transform = stringTransforms[transformType];
-
-    if (transform != undefined) {
+    const transform = StringTransformations[transformType];
+    if (isFunction(transform)) {
       result = transform(str);
     }
   }
-
   return result;
 };
-
-var _transform = function _transform(str, transArray) {
-  var result = str;
-  transArray.forEach(function (transformType) {
+const _transform = function (str, transArray) {
+  let result = str;
+  transArray.forEach(transformType => {
     result = _singleTransform(result, transformType);
   });
   return result;
 };
-
-var transplit = function transplit(str, separator) {
-  var result = [];
-
-  if ((0, _locustjsBase.isSomeString)(str)) {
-    var _transforms = [];
-    var _finalTransforms = [];
-
-    for (var _len = arguments.length, transforms = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-      transforms[_key - 2] = arguments[_key];
-    }
-
-    for (var _i = 0, _transforms2 = transforms; _i < _transforms2.length; _i++) {
-      var item = _transforms2[_i];
-
-      if ((0, _locustjsBase.isArray)(item)) {
-        var _iterator2 = _createForOfIteratorHelper(item),
-            _step2;
-
-        try {
-          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-            var subItem = _step2.value;
-
-            _transforms.push(subItem);
-          }
-        } catch (err) {
-          _iterator2.e(err);
-        } finally {
-          _iterator2.f();
+const xsplit = function (str, separator, ...transforms) {
+  let result = [];
+  if (isSomeString(str)) {
+    let _transforms = [];
+    let _finalTransforms = [];
+    for (let item of transforms) {
+      if (isArray(item)) {
+        for (let subItem of item) {
+          _transforms.push(subItem);
         }
-      } else if ((0, _locustjsBase.isSomeString)(item)) {
-        if (item.indexOf(',') >= 0) {
-          var temp = transplit(item, ',', SplitOptions.trimToLowerAndRemoveEmpties);
-
-          var _iterator3 = _createForOfIteratorHelper(temp),
-              _step3;
-
-          try {
-            for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-              var _subItem = _step3.value;
-
-              _transforms.push(_subItem);
-            }
-          } catch (err) {
-            _iterator3.e(err);
-          } finally {
-            _iterator3.f();
-          }
-        } else {
-          _transforms.push(item.trim().toLowerCase());
+      } else if (isSomeString(item)) {
+        let temp = xsplit(item, ",", SplitOptions.trimToLowerAndRemoveEmpties);
+        for (let subItem of temp) {
+          _transforms.push(subItem);
         }
-      } else if ((0, _locustjsBase.isNumeric)(item)) {
+      } else if (isNumeric(item)) {
         _transforms.push(item);
-      } else if ((0, _locustjsBase.isFunction)(item)) {
+      } else if (isFunction(item)) {
         _transforms.push(item);
       }
     }
-
-    for (var _i2 = 0, _transforms3 = _transforms; _i2 < _transforms3.length; _i2++) {
-      var transform = _transforms3[_i2];
-
+    for (let transform of _transforms) {
       if (SplitOptions.isValid(transform)) {
-        var transformValue = SplitOptions.getNumber(transform);
-
+        const transformValue = SplitOptions.getNumber(transform);
         switch (transformValue) {
           case SplitOptions.removeEmpties:
-            _finalTransforms.push('free');
-
+            _finalTransforms.push("free");
             break;
-
           case SplitOptions.trim:
-            _finalTransforms.push('trim');
-
+            _finalTransforms.push("trim");
             break;
-
           case SplitOptions.trimAndRemoveEmpties:
-            _finalTransforms.push('trim');
-
-            _finalTransforms.push('free');
-
+            _finalTransforms.push("trim");
+            _finalTransforms.push("free");
             break;
-
           case SplitOptions.toLower:
-            _finalTransforms.push('lower');
-
+            _finalTransforms.push("lower");
             break;
-
           case SplitOptions.trimToLowerAndRemoveEmpties:
-            _finalTransforms.push('trim');
-
-            _finalTransforms.push('lower');
-
-            _finalTransforms.push('free');
-
+            _finalTransforms.push("trim");
+            _finalTransforms.push("lower");
+            _finalTransforms.push("free");
             break;
-
           case SplitOptions.toUpper:
-            _finalTransforms.push('upper');
-
+            _finalTransforms.push("upper");
             break;
-
           case SplitOptions.trimToUpperAndRemoveEmpties:
-            _finalTransforms.push('trim');
-
-            _finalTransforms.push('upper');
-
-            _finalTransforms.push('free');
-
+            _finalTransforms.push("trim");
+            _finalTransforms.push("upper");
+            _finalTransforms.push("free");
             break;
         }
       } else {
         _finalTransforms.push(transform);
       }
     }
-
-    var arr = str.split(separator);
-
+    let arr = str.split(separator);
     if (_finalTransforms.length) {
-      var i = 0;
-
+      let i = 0;
       while (i < arr.length) {
-        var _item = arr[i++];
-        _item = _transform(_item, _finalTransforms);
-
-        if (_finalTransforms[_finalTransforms.length - 1] == 'free' && (!_item || _item.length == 0)) {
+        let item = arr[i++];
+        item = _transform(item, _finalTransforms);
+        if ((_finalTransforms[_finalTransforms.length - 1] == "free" || _finalTransforms[_finalTransforms.length - 1] == "f") && (!item || item.length == 0)) {
           continue;
         }
-
-        result.push(_item);
+        result.push(item);
       }
     } else {
       result = arr;
     }
   }
-
   return result;
 };
-
-exports.transplit = transplit;
-
-var nestedSplit = function nestedSplit(str) {
-  var result = [];
-
-  for (var _len2 = arguments.length, rest = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
-    rest[_key2 - 1] = arguments[_key2];
-  }
-
-  var separators = rest;
-  var transforms = null;
-
-  if (rest.length > 1) {
-    transforms = rest[rest.length - 1];
-
-    if ((0, _locustjsBase.isSomeString)(transforms) && transforms != ',' && transforms.indexOf(',') >= 0 || (0, _locustjsBase.isArray)(transforms)) {
-      separators = rest.slice(0, rest.length - 1);
-    } else {
-      transforms = null;
+function _nsplit(s, separators, callback, level) {
+  let result = s.split(separators[0]);
+  if (separators.length > 1) {
+    for (let i = 0; i < result.length; i++) {
+      result[i] = _nsplit(result[i], separators.slice(1), callback, level + 1);
     }
-  }
-
-  separators = separators.flat();
-
-  function splitStringArray(arr, i) {
-    var _result = [];
-
-    if (i < separators.length) {
-      for (var index in arr) {
-        if ((0, _locustjsBase.isString)(arr[index])) {
-          var tempArr = transplit(arr[index], separators[i], transforms);
-          var tempItem = splitStringArray(tempArr, i + 1);
-
-          _result.push(tempItem);
-        }
-      }
-    } else {
-      _result = arr;
-    }
-
-    return _result;
-  }
-
-  result = splitStringArray([str], 0)[0];
-  return result;
-};
-
-exports.nestedSplit = nestedSplit;
-
-var format = function format() {
-  var s = arguments.length ? arguments[0] : '';
-  var _args = [];
-
-  if (arguments.length) {
-    (0, _locustjsBase.forEach)(arguments, function (a) {
-      if (a.index > 0) _args.push(a.value);
-    });
-  }
-
-  function formatWithObject(prefix, obj) {
-    (0, _locustjsBase.forEach)(obj, function (args) {
-      var key = args.key;
-      var i = args.index;
-      var pv = args.value;
-
-      if (pv == null) {
-        pv = '';
-      }
-
-      if ((0, _locustjsBase.isObject)(pv)) {
-        formatWithObject(prefix + key + '.', pv);
-      } else {
-        s = replaceAll(s, '{' + prefix + key + '}', pv);
-      }
-    });
-  }
-
-  if (_args.length > 0) {
-    if (_args.length == 1) {
-      var values = _args[0];
-
-      if ((0, _locustjsBase.isArray)(values)) {
-        var _i3 = 0;
-        values.forEach(function (value) {
-          var v = value == null ? '' : value;
-          s = replaceAll(s, '{' + _i3 + '}', v);
-          _i3++;
-        });
-      } else if ((0, _locustjsBase.isSomeObject)(values)) {
-        (0, _locustjsBase.forEach)(values, function (args) {
-          var key = args.key;
-          var i = args.index;
-          var pv = args.value;
-
-          if (pv == null) {
-            pv = '';
-          }
-
-          if ((0, _locustjsBase.isSomeObject)(pv)) {
-            if ((0, _locustjsBase.isNumeric)(key)) {
-              formatWithObject('', pv);
-            } else {
-              formatWithObject(key + '.', pv);
-            }
-          } else {
-            s = replaceAll(s, '{' + key + '}', pv);
-          }
-        });
-      } else {
-        if (values == null) {
-          values = '';
-        }
-
-        s = replaceAll(s, '{0}', values);
-      }
-    } else {
-      s = s.replace(/{(\d+)}/g, function (match, number) {
-        if (number >= 0 && number < _args.length) {
-          var v = _args[number] == null ? '' : _args[number];
-          return _args[number] != undefined ? v : match;
-        } else {
-          return match;
-        }
+  } else if (isFunction(callback)) {
+    for (let i = 0; i < result.length; i++) {
+      result[i] = callback({
+        input: s,
+        value: result[i],
+        index: i,
+        level,
+        separator: separators[0]
       });
     }
   }
-
-  var i = 0;
-  var state = 0;
-  var ex = '';
-  var result = [];
-  var temp = '';
-
-  while (i < s.length) {
-    var ch = s[i];
-
-    switch (state) {
-      case 0:
-        if (ch == '{') {
-          if (temp.length) {
-            result.push(temp);
-          }
-
-          temp = '';
-          state = 1;
-        } else if (ch == '\\') {
-          state = 2;
-        } else {
-          temp += ch;
-        }
-
-        break;
-
-      case 1:
-        if (ch == '}') {
-          if (ex.trim()) {
-            if (ex[0] == ':') {
-              var e = format(ex.substr(1), _args);
-              var exr = Function('return ' + e)();
-              result.push(exr);
-            } else {
-              result.push('{' + ex + '}');
-            }
-
-            ex = '';
-          }
-
-          state = 0;
-        } else {
-          ex += ch;
-        }
-
-        break;
-
-      case 2:
-        if (ch == '{' || ch == '}') {
-          result.push(ch);
-        } else {
-          result.push('\\' + ch);
-        }
-
-        state = 0;
-        break;
+  return result;
+}
+function nsplit(s, separators, callback) {
+  if (isSomeString(s) && isSomeArray(separators)) {
+    return _nsplit(s, separators, callback, 0);
+  }
+  return [];
+}
+const format = function (str, ...args) {
+  let result = [];
+  if (isSomeString(str) && args.length > 0) {
+    let _args;
+    if (args.length == 1) {
+      _args = args[0];
+    } else {
+      _args = args;
     }
-
-    i++;
+    let i = 0;
+    let state = 0;
+    let temp = "";
+    while (i < str.length) {
+      let ch = str[i];
+      switch (state) {
+        case 0:
+          if (ch == "{") {
+            if (temp.length) {
+              result.push(temp);
+            }
+            temp = "";
+            state = 1;
+          } else if (ch == '}') {
+            if (temp.length) {
+              result.push(temp);
+            }
+            temp = "";
+            state = 2;
+          } else {
+            temp += ch;
+          }
+          break;
+        case 1:
+          if (ch == "{") {
+            result.push("{");
+            state = 0;
+          } else if (ch == "}") {
+            if (temp) {
+              if (isNumeric(temp)) {
+                result.push(['[' + temp + ']']);
+              } else {
+                result.push([temp]);
+              }
+              temp = "";
+            }
+            state = 0;
+          } else {
+            if (!(isWord(ch) || ch == '.' || ch == '[' || ch == ']')) {
+              throw `Invalid character '${ch}' in interpolation.`;
+            }
+            temp += ch;
+          }
+          break;
+        case 2:
+          if (ch == '}') {
+            result.push("}");
+          } else {
+            temp = '}' + ch;
+          }
+          state = 0;
+          break;
+      }
+      i++;
+    }
+    if (state == 1) {
+      throw `Unterminated interpolation detected at the end of input.`;
+    }
+    if (temp.length) {
+      result.push(temp);
+    }
+    let interpolations = {};
+    for (i = 0; i < result.length; i++) {
+      if (isArray(result[i])) {
+        const key = result[i][0];
+        if (interpolations[key] == undefined) {
+          if (isFunction(_args)) {
+            if (key[0] == '[' && key[key.length - 1] == ']') {
+              interpolations[key] = _args(key.substr(1, key.length - 2));
+            } else {
+              interpolations[key] = _args(key);
+            }
+          } else {
+            interpolations[key] = queryObject(_args, key);
+          }
+          if (isFunction(interpolations[key])) {
+            interpolations[key] = interpolations[key]();
+          }
+        }
+        result[i] = interpolations[key];
+      }
+    }
+  } else {
+    result = [str];
   }
-
-  if (temp.length) {
-    result.push(temp);
-  }
-
-  return result.join('');
+  return result.join("");
 };
+function configureStringExtensions(options, extendAsStaticMethods = true) {
+  const eh = new ExtensionHelper(options, console);
+  eh.extend(String, "replaceAll", function (find, replace) {
+    return replaceAll(this, find, replace);
+  });
+  eh.extend(String, "reverse", function () {
+    return reverse(this);
+  });
+  eh.extend(String, "ltrim", function () {
+    return ltrim(this);
+  });
+  eh.extend(String, "rtrim", function () {
+    return rtrim(this);
+  });
+  eh.extend(String, "toArray", function () {
+    return toArray(this);
+  });
+  eh.extend(String, "toBytes", function () {
+    return toBytes(this);
+  });
+  eh.extend(String, "format", function (...args) {
+    return format(this, ...args);
+  });
+  eh.extend(String, "isCharacter", function (...args) {
+    return isCharacter(this, ...args);
+  });
+  eh.extend(String, "isPunctuation", function () {
+    return isPunctuation(this);
+  });
+  eh.extend(String, "isControl", function () {
+    return isControl(this);
+  });
+  eh.extend(String, "isAlpha", function () {
+    return isAlpha(this);
+  });
+  eh.extend(String, "isLower", function () {
+    return isLower(this);
+  });
+  eh.extend(String, "isUpper", function () {
+    return isUpper(this);
+  });
+  eh.extend(String, "isDigit", function () {
+    return isDigit(this);
+  });
+  eh.extend(String, "isAlphaNum", function () {
+    return isAlphaNum(this);
+  });
+  eh.extend(String, "isWord", function () {
+    return isWord(this);
+  });
+  eh.extend(String, "isArithmatic", function () {
+    return isArithmatic(this);
+  });
+  eh.extend(String, "isLogic", function () {
+    return isLogic(this);
+  });
+  eh.extend(String, "isBitwise", function () {
+    return isBitwise(this);
+  });
+  eh.extend(String, "isComparison", function () {
+    return isComparison(this);
+  });
+  eh.extend(String, "isWhitespace", function () {
+    return isWhitespace(this);
+  });
+  eh.extend(String, "isMath", function () {
+    return isMath(this);
+  });
+  eh.extend(String, "isLetter", function () {
+    return isLetter(this);
+  });
+  eh.extend(String, "stringify", function (ch) {
+    return stringify(this, ch);
+  });
+  eh.extend(String, "toggleCase", function () {
+    return toggleCase(this);
+  });
+  eh.extend(String, "changeCase", function () {
+    return changeCase(this);
+  });
+  eh.extend(String, "unString", function () {
+    return unString(this);
+  });
+  eh.extend(String, "pascalCase", function () {
+    return pascalCase(this);
+  });
+  eh.extend(String, "camelCase", function () {
+    return camelCase(this);
+  });
+  eh.extend(String, "capitalize", function () {
+    return capitalize(this);
+  });
+  eh.extend(String, "left", function (n) {
+    return left(this, n);
+  });
+  eh.extend(String, "right", function (n) {
+    return right(this, n);
+  });
+  eh.extend(String, "xsplit", function (...args) {
+    return xsplit(this, ...args);
+  });
+  eh.extend(String, "nsplit", function (...args) {
+    return nsplit(this, ...args);
+  });
+  /* examples
+  nsplit("a=1&b=ali", '&', '=') or nsplit("a=1&b=ali", ['&', '='])
+  output:
+  [
+  	["a",1],
+  	["b","ali"]
+  ]
+  
+  nsplit("a=1:b=ali&a=2:b=reza:c=true&a=3:b=:c=false&b=saeed:c=true", '&', ':', '=')
+  output:
+  	[
+  		[
+  			["a",1],
+  			["b", "ali"]
+  		],
+  		[
+  			["a",2],
+  			["b", "reza"],
+  			["c", true]
+  		],
+  		[
+  			["a",3],
+  			["b", ""],
+  			["c", false]
+  		],
+  		[
+  			["b", "saeed"],
+  			["c", true]
+  		]
+  	]
+  */
 
-exports.format = format;
-
-function configureStringExtensions(options) {
-  var _options = (0, _locustjsExtensionsOptions.configureOptions)(options);
-
-  if (!String.prototype.replaceAll || (0, _locustjsExtensionsOptions.shouldExtend)('replaceAll', _options)) {
-    String.prototype.replaceAll = function (x) {
-      return replaceAll(x);
-    };
-  }
-
-  if (!String.prototype.reverse || (0, _locustjsExtensionsOptions.shouldExtend)('reverse', _options)) {
-    String.prototype.reverse = function (x) {
-      return _reverse(this);
-    };
-  }
-
-  if (!String.prototype.ltrim || (0, _locustjsExtensionsOptions.shouldExtend)('ltrim', _options)) {
-    String.prototype.ltrim = function () {
-      return _ltrim(this);
-    };
-  }
-
-  if (!String.prototype.rtrim || (0, _locustjsExtensionsOptions.shouldExtend)('rtrim', _options)) {
-    String.prototype.rtrim = function () {
-      return _rtrim(this);
-    };
-  }
-
-  if (!String.prototype.toBytes || (0, _locustjsExtensionsOptions.shouldExtend)('toBytes', _options)) {
-    String.prototype.toBytes = function () {
-      return toBytes(this);
-    };
-  }
-
-  if (!String.prototype.format || (0, _locustjsExtensionsOptions.shouldExtend)('format', _options)) {
-    String.prototype.format = function () {
-      for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-        args[_key3] = arguments[_key3];
-      }
-
-      format.apply(void 0, [this].concat(args));
-    };
-  }
-
-  if (!String.prototype.isPunctuation || (0, _locustjsExtensionsOptions.shouldExtend)('isPunctuation', _options)) {
-    String.prototype.isPunctuation = function () {
-      return isPunctuation(this);
-    };
-  }
-
-  if (!String.prototype.isControl || (0, _locustjsExtensionsOptions.shouldExtend)('isControl', _options)) {
-    String.prototype.isControl = function () {
-      return isControl(this);
-    };
-  }
-
-  if (!String.prototype.isAlpha || (0, _locustjsExtensionsOptions.shouldExtend)('isAlpha', _options)) {
-    String.prototype.isAlpha = function () {
-      return isAlpha(this);
-    };
-  }
-
-  if (!String.prototype.isLetter || (0, _locustjsExtensionsOptions.shouldExtend)('isLetter', _options)) {
-    String.prototype.isLetter = function () {
-      return isAlpha(this);
-    };
-  }
-
-  if (!String.prototype.isLower || (0, _locustjsExtensionsOptions.shouldExtend)('isLower', _options)) {
-    String.prototype.isLower = function () {
-      return isLower(this);
-    };
-  }
-
-  if (!String.prototype.isUpper || (0, _locustjsExtensionsOptions.shouldExtend)('isUpper', _options)) {
-    String.prototype.isUpper = function () {
-      return isUpper(this);
-    };
-  }
-
-  if (!String.prototype.isDigit || (0, _locustjsExtensionsOptions.shouldExtend)('isDigit', _options)) {
-    String.prototype.isDigit = function () {
-      return isDigit(this);
-    };
-  }
-
-  if (!String.prototype.isAlphaNum || (0, _locustjsExtensionsOptions.shouldExtend)('isAlphaNum', _options)) {
-    String.prototype.isAlphaNum = function () {
-      return isAlphaNum(this);
-    };
-  }
-
-  if (!String.prototype.isArithmatic || (0, _locustjsExtensionsOptions.shouldExtend)('isArithmatic', _options)) {
-    String.prototype.isArithmatic = function () {
-      return isArithmatic(this);
-    };
-  }
-
-  if (!String.prototype.isLogic || (0, _locustjsExtensionsOptions.shouldExtend)('isLogic', _options)) {
-    String.prototype.isLogic = function () {
-      return isLogic(this);
-    };
-  }
-
-  if (!String.prototype.isBitwise || (0, _locustjsExtensionsOptions.shouldExtend)('isBitwise', _options)) {
-    String.prototype.isBitwise = function () {
-      return isBitwise(this);
-    };
-  }
-
-  if (!String.prototype.isComparison || (0, _locustjsExtensionsOptions.shouldExtend)('isComparison', _options)) {
-    String.prototype.isComparison = function () {
-      return isComparison(this);
-    };
-  }
-
-  if (!String.prototype.isWhitespace || (0, _locustjsExtensionsOptions.shouldExtend)('isWhitespace', _options)) {
-    String.prototype.isWhitespace = function () {
-      return isWhitespace(this);
-    };
-  }
-
-  if (!String.prototype.isMath || (0, _locustjsExtensionsOptions.shouldExtend)('isMath', _options)) {
-    String.prototype.isMath = function () {
-      return isMath(this);
-    };
-  }
-
-  if (!String.prototype.left || (0, _locustjsExtensionsOptions.shouldExtend)('left', _options)) {
-    String.prototype.left = function (n) {
-      return left(this, n);
-    };
-  }
-
-  if (!String.prototype.right || (0, _locustjsExtensionsOptions.shouldExtend)('right', _options)) {
-    String.prototype.right = function (n) {
-      return right(this, n);
-    };
-  }
-
-  if (!String.prototype.transplit || (0, _locustjsExtensionsOptions.shouldExtend)('transplit', _options)) {
-    String.prototype.transplit = function (separator, transforms) {
-      return transplit(this, separator, transforms);
-    };
-  }
-
-  if (!String.prototype.nestedSplit || (0, _locustjsExtensionsOptions.shouldExtend)('nestedSplit', _options)) {
-    /* examples
-    	input: "a=1&b=ali"
-    	output:
-    	[
-    		["a",1],
-    		["b","ali"]
-    	]
-    	
-    	input: "a=1:b=ali&a=2:b=reza:c=true&a=3:b=:c=false&b=saeed:c=true"
-    	output:
-    		[
-    			[ ["a",1],["b", "ali"] ],
-    			[ ["a",2],["b", "reza"],["c", true] ],
-    			[ ["a",3],["b", "" ],["c", false] ],
-    			[ ["b", "saeed"],["c", true] ]
-    		]
-    */
-    String.prototype.nestedSplit = function () {
-      for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-        args[_key4] = arguments[_key4];
-      }
-
-      return nestedSplit.apply(void 0, [this].concat(args));
-    };
-  }
-
-  if (!String.prototype.pascalCase || (0, _locustjsExtensionsOptions.shouldExtend)('pascalcase', _options)) {
-    String.prototype.pascalCase = function () {
-      return pascalCase(this);
-    };
-  }
-
-  if (!String.prototype.camelCase || (0, _locustjsExtensionsOptions.shouldExtend)('camelcase', _options)) {
-    String.prototype.camelCase = function () {
-      return camelCase(this);
-    };
-  }
-
-  if (!String.prototype.capitalize || (0, _locustjsExtensionsOptions.shouldExtend)('capitalize', _options)) {
-    String.prototype.capitalize = function () {
-      return _capitalize(this);
-    };
+  if (extendAsStaticMethods) {
+    eh.extend(String, "replaceAll", replaceAll, true);
+    eh.extend(String, "reverse", reverse, true);
+    eh.extend(String, "ltrim", ltrim, true);
+    eh.extend(String, "rtrim", rtrim, true);
+    eh.extend(String, "toArray", toArray, true);
+    eh.extend(String, "fromArray", fromArray, true);
+    eh.extend(String, "toBytes", toBytes, true);
+    eh.extend(String, "fromBytes", fromBytes, true);
+    eh.extend(String, "isCharacter", isCharacter, true);
+    eh.extend(String, "isPunctuation", isPunctuation, true);
+    eh.extend(String, "isControl", isControl, true);
+    eh.extend(String, "isAlpha", isAlpha, true);
+    eh.extend(String, "isLower", isLower, true);
+    eh.extend(String, "isUpper", isUpper, true);
+    eh.extend(String, "isDigit", isDigit, true);
+    eh.extend(String, "isAlphaNum", isAlphaNum, true);
+    eh.extend(String, "isWord", isWord, true);
+    eh.extend(String, "isArithmatic", isArithmatic, true);
+    eh.extend(String, "isLogic", isLogic, true);
+    eh.extend(String, "isBitwise", isBitwise, true);
+    eh.extend(String, "isComparison", isComparison, true);
+    eh.extend(String, "isWhitespace", isWhitespace, true);
+    eh.extend(String, "isMath", isMath, true);
+    eh.extend(String, "isLetter", isLetter, true);
+    eh.extend(String, "stringify", stringify, true);
+    eh.extend(String, "toggleCase", toggleCase, true);
+    eh.extend(String, "changeCase", changeCase, true);
+    eh.extend(String, "unString", unString, true);
+    eh.extend(String, "pascalCase", pascalCase, true);
+    eh.extend(String, "camelCase", camelCase, true);
+    eh.extend(String, "capitalize", capitalize, true);
+    eh.extend(String, "left", left, true);
+    eh.extend(String, "right", right, true);
+    eh.extend(String, "format", format, true);
+    eh.extend(String, "xsplit", xsplit, true);
+    eh.extend(String, "nsplit", nsplit, true);
   }
 }
-
-var _default = configureStringExtensions;
-exports.default = _default;
+export default configureStringExtensions;
+export { StringBuilder, SplitOptions, Chars, StringTransformations, replaceAll, reverse, ltrim, rtrim, left, right, toArray, fromArray, toBytes, fromBytes, isCharacter, isPunctuation, isControl, isAlpha, isLower, isUpper, isDigit, isAlphaNum, isWord, isArithmatic, isLogic, isBitwise, isComparison, isWhitespace, isMath, isLetter, toggleCase, changeCase, pascalCase, camelCase, capitalize, stringify, unString, format, xsplit, nsplit };
