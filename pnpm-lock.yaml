@@ -15,8 +15,8 @@ dependencies:
     specifier: ^2.1.0
     version: 2.1.0
   '@locustjs/htmlencode':
-    specifier: ^1.0.0
-    version: 1.0.0
+    specifier: ^1.0.1
+    version: 1.0.1
 
 devDependencies:
   '@babel/cli':
@@ -1333,8 +1333,8 @@ packages:
       '@locustjs/base': 2.1.0
     dev: false
 
-  /@locustjs/htmlencode@1.0.0:
-    resolution: {integrity: sha512-bn4MX+hNf2sBBfP0+PDznDGa3qIpvfLbjp7KBo1AcCgiX+h09MaQLJx/DSqCwbH7vXuaudMIsqHBDHEsm8w6Hg==}
+  /@locustjs/htmlencode@1.0.1:
+    resolution: {integrity: sha512-eLJDsmWIoyxAfeCUkk+4umBmaI6ACE6bzyT0RAAnycXhG14vTrDWu7OVH/F3b5vd0eLIQtblR6au4fpApH4gSQ==}
     dependencies:
       '@locustjs/base': 2.1.0
     dev: false
