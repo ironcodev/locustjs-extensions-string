@@ -1,8 +1,21 @@
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function () {}; return { s: F, n: function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function (e) { throw e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function () { it = it.call(o); }, n: function () { var step = it.next(); normalCompletion = step.done; return step; }, e: function (e) { didErr = true; err = e; }, f: function () { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
+function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
 import { isArray, isString, isSomeString, isNumeric, isFunction, isSomeArray, queryObject } from "@locustjs/base";
 import Enum from "@locustjs/enum";
 import ExtensionHelper from "@locustjs/extensions-options";
 import { htmlEncode, htmlDecode } from "@locustjs/htmlencode";
-const SplitOptions = Enum.define({
+var SplitOptions = Enum.define({
   none: 0,
   removeEmpties: 1,
   trim: 2,
@@ -12,40 +25,60 @@ const SplitOptions = Enum.define({
   toUpper: 6,
   trimToUpperAndRemoveEmpties: 7
 }, "SplitOptions");
-const utf8Encoder = new TextEncoder();
-const utf8Decoder = new TextDecoder();
-class StringBuilder {
-  constructor(bufferSize) {
+var utf8Encoder = new TextEncoder();
+var utf8Decoder = new TextDecoder();
+var StringBuilder = /*#__PURE__*/function () {
+  function StringBuilder(bufferSize) {
+    _classCallCheck(this, StringBuilder);
     this.bufferSize = isNumeric(bufferSize) ? parseInt(bufferSize) || 32 : 32;
     this._buffer = new Array(this.bufferSize);
     this._index = 0;
     this._length = 0;
   }
-  append(x) {
-    this._buffer[this._index] = isSomeString(x) ? x : isFunction(x.toString) ? x.toString() : "";
-    this._length += this._buffer[this._index].length;
-    this._index++;
-    if (this._index == this.bufferSize) {
-      this._buffer.splice(this.bufferSize, ...new Array(this.bufferSize));
+  _createClass(StringBuilder, [{
+    key: "append",
+    value: function append(x) {
+      this._buffer[this._index] = isSomeString(x) ? x : isFunction(x.toString) ? x.toString() : "";
+      this._length += this._buffer[this._index].length;
+      this._index++;
+      if (this._index == this.bufferSize) {
+        var _this$_buffer;
+        (_this$_buffer = this._buffer).splice.apply(_this$_buffer, [this.bufferSize].concat(_toConsumableArray(new Array(this.bufferSize))));
+      }
     }
-  }
-  get length() {
-    return this._length;
-  }
-  toString() {
-    const result = this._buffer.join("");
-    this._buffer = new Array(this.bufferSize);
-    this._index = 0;
-    this._length = 0;
-    return result;
-  }
-}
-const replaceAll = (source, find, replace) => source.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "g"), replace);
-const reverse = x => isSomeString(x) ? x.split("").reverse().join("") : "";
-const ltrim = x => isSomeString(x) ? x.trimLeft() : "";
-const rtrim = x => isSomeString(x) ? x.trimRight() : "";
-const toBytes = x => isSomeString(x) ? utf8Encoder.encode(x) : new Uint8Array();
-const fromBytes = x => {
+  }, {
+    key: "length",
+    get: function get() {
+      return this._length;
+    }
+  }, {
+    key: "toString",
+    value: function toString() {
+      var result = this._buffer.join("");
+      this._buffer = new Array(this.bufferSize);
+      this._index = 0;
+      this._length = 0;
+      return result;
+    }
+  }]);
+  return StringBuilder;
+}();
+var replaceAll = function replaceAll(source, find, replace) {
+  return source.replace(new RegExp(find.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"), "g"), replace);
+};
+var _reverse = function reverse(x) {
+  return isSomeString(x) ? x.split("").reverse().join("") : "";
+};
+var _ltrim = function ltrim(x) {
+  return isSomeString(x) ? x.trimLeft() : "";
+};
+var _rtrim = function rtrim(x) {
+  return isSomeString(x) ? x.trimRight() : "";
+};
+var toBytes = function toBytes(x) {
+  return isSomeString(x) ? utf8Encoder.encode(x) : new Uint8Array();
+};
+var fromBytes = function fromBytes(x) {
   if (x instanceof Uint8Array) {
     return utf8Decoder.decode(x);
   } else if (isArray(x)) {
@@ -54,27 +87,36 @@ const fromBytes = x => {
     return "";
   }
 };
-const toArray = x => {
-  let result = [];
+var toArray = function toArray(x) {
+  var result = [];
   if (isSomeString(x)) {
-    for (let i = 0; i < x.length; i++) {
+    for (var i = 0; i < x.length; i++) {
       result.push(x.charCodeAt(i));
     }
   }
   return result;
 };
-const fromArray = arr => {
-  const result = new StringBuilder();
+var fromArray = function fromArray(arr) {
+  var result = new StringBuilder();
   if (isArray(arr)) {
-    for (let item of arr) {
-      if (isNumeric(item)) {
-        result.append(String.fromCharCode(item));
+    var _iterator = _createForOfIteratorHelper(arr),
+      _step;
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var item = _step.value;
+        if (isNumeric(item)) {
+          result.append(String.fromCharCode(item));
+        }
       }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
     }
   }
   return result.toString();
 };
-const Chars = {
+var Chars = {
   punctuation: [".", ",", ";", ":", "?", "!", "(", ")", "-", "'", '"', "/", "\\", "{", "}", "[", "]", "%", "#"],
   control: ["~", "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "|", "<", ">", "?", ":", "{", "}", "[", "]", ";", '"', "'", ",", ".", "/", "-", "=", "\\", "`"],
   arithmatic: ["/", "\\", "+", "-", "(", ")", "%", "^", "*", "++", "--", "*=", "/=", "+=", "-="],
@@ -82,25 +124,58 @@ const Chars = {
   bitwise: ["&", "|", ">>", "<<"],
   comparison: ["==", "!=", "<>", ">", "<", ">=", "<=", "===", "!=="]
 };
-const isCharacter = x => isString(x) && x.length == 1;
-const isPunctuation = x => isSomeString(x) && Chars.punctuation.indexOf(x) >= 0;
-const isControl = x => isSomeString(x) && Chars.control.indexOf(x) >= 0;
-const isAlpha = x => isSomeString(x) && x.match(/^[a-z]+$/i) !== null;
-const isLower = x => isSomeString(x) && x.match(/^[a-z]+$/) !== null;
-const isUpper = x => isSomeString(x) && x.match(/^[A-Z]+$/) !== null;
-const isDigit = x => isSomeString(x) && x.match(/^[0-9]+$/) !== null;
-const isAlphaNum = x => isSomeString(x) && x.match(/^[a-z0-9]+$/i) !== null;
-const isWord = x => isSomeString(x) && x.match(/^\w+$/i) !== null;
-const isArithmatic = x => isSomeString(x) && Chars.arithmatic.indexOf(x) >= 0;
-const isLogic = x => isSomeString(x) && Chars.logic.indexOf(x) >= 0;
-const isBitwise = x => isSomeString(x) && Chars.bitwise.indexOf(x) >= 0;
-const isComparison = x => isSomeString(x) && Chars.comparison.indexOf(x) >= 0;
-const isWhitespace = x => isSomeString(x) && x.match(/^\s+$/) !== null;
-const isMath = x => isArithmatic(x) || isLogic(x) || isBitwise(x) || isComparison(x);
-const isLetter = isAlpha;
-const stringify = (x, ch = '"') => `${ch}${x}${ch}`;
-const unString = x => {
-  let result = "";
+var isCharacter = function isCharacter(x) {
+  return isString(x) && x.length == 1;
+};
+var isPunctuation = function isPunctuation(x) {
+  return isSomeString(x) && Chars.punctuation.indexOf(x) >= 0;
+};
+var isControl = function isControl(x) {
+  return isSomeString(x) && Chars.control.indexOf(x) >= 0;
+};
+var isAlpha = function isAlpha(x) {
+  return isSomeString(x) && x.match(/^[a-z]+$/i) !== null;
+};
+var isLower = function isLower(x) {
+  return isSomeString(x) && x.match(/^[a-z]+$/) !== null;
+};
+var isUpper = function isUpper(x) {
+  return isSomeString(x) && x.match(/^[A-Z]+$/) !== null;
+};
+var isDigit = function isDigit(x) {
+  return isSomeString(x) && x.match(/^[0-9]+$/) !== null;
+};
+var isAlphaNum = function isAlphaNum(x) {
+  return isSomeString(x) && x.match(/^[a-z0-9]+$/i) !== null;
+};
+var isWord = function isWord(x) {
+  return isSomeString(x) && x.match(/^\w+$/i) !== null;
+};
+var isArithmatic = function isArithmatic(x) {
+  return isSomeString(x) && Chars.arithmatic.indexOf(x) >= 0;
+};
+var isLogic = function isLogic(x) {
+  return isSomeString(x) && Chars.logic.indexOf(x) >= 0;
+};
+var isBitwise = function isBitwise(x) {
+  return isSomeString(x) && Chars.bitwise.indexOf(x) >= 0;
+};
+var isComparison = function isComparison(x) {
+  return isSomeString(x) && Chars.comparison.indexOf(x) >= 0;
+};
+var isWhitespace = function isWhitespace(x) {
+  return isSomeString(x) && x.match(/^\s+$/) !== null;
+};
+var isMath = function isMath(x) {
+  return isArithmatic(x) || isLogic(x) || isBitwise(x) || isComparison(x);
+};
+var isLetter = isAlpha;
+var _stringify = function stringify(x) {
+  var ch = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '"';
+  return "".concat(ch).concat(x).concat(ch);
+};
+var unString = function unString(x) {
+  var result = "";
   if (isSomeString(x)) {
     if (['"', "'", "`"].indexOf(x[0]) >= 0) {
       result = x.substr(1);
@@ -111,39 +186,56 @@ const unString = x => {
   }
   return result;
 };
-const pascalCase = x => isSomeString(x) ? x.match(/[a-z]+/gi).map(word => word.charAt(0).toUpperCase() + word.substr(1)).join("") : "";
-const camelCase = x => isSomeString(x) ? x.match(/[a-z]+/gi).map((word, i) => (i == 0 ? word.charAt(0).toLowerCase() : word.charAt(0).toUpperCase()) + word.substr(1)).join("") : "";
-const capitalize = function (str) {
-  let result = str;
+var pascalCase = function pascalCase(x) {
+  return isSomeString(x) ? x.match(/[a-z]+/gi).map(function (word) {
+    return word.charAt(0).toUpperCase() + word.substr(1);
+  }).join("") : "";
+};
+var camelCase = function camelCase(x) {
+  return isSomeString(x) ? x.match(/[a-z]+/gi).map(function (word, i) {
+    return (i == 0 ? word.charAt(0).toLowerCase() : word.charAt(0).toUpperCase()) + word.substr(1);
+  }).join("") : "";
+};
+var _capitalize = function capitalize(str) {
+  var result = str;
   if (isSomeString(str)) {
-    let arr = [];
-    let inWord = false;
-    for (let ch of str) {
-      if (isAlpha(ch)) {
-        if (!inWord) {
-          inWord = true;
-          if (isLower(ch)) {
-            arr.push(ch.toUpperCase());
+    var arr = [];
+    var inWord = false;
+    var _iterator2 = _createForOfIteratorHelper(str),
+      _step2;
+    try {
+      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+        var ch = _step2.value;
+        if (isAlpha(ch)) {
+          if (!inWord) {
+            inWord = true;
+            if (isLower(ch)) {
+              arr.push(ch.toUpperCase());
+            } else {
+              arr.push(ch);
+            }
           } else {
             arr.push(ch);
           }
         } else {
           arr.push(ch);
+          inWord = false;
         }
-      } else {
-        arr.push(ch);
-        inWord = false;
       }
+    } catch (err) {
+      _iterator2.e(err);
+    } finally {
+      _iterator2.f();
     }
     result = arr.join("");
   }
   return result;
 };
-const toggleCase = x => {
-  const result = new StringBuilder();
+var toggleCase = function toggleCase(x) {
+  var result = new StringBuilder();
   if (isSomeString(x)) {
-    for (let i = 0; i < x.length; i++) {
-      let code = x.charCodeAt(i);
+    for (var i = 0; i < x.length; i++) {
+      var code = x.charCodeAt(i);
       if (code >= 65 && code <= 90) {
         result.append(String.fromCharCode(code + 32));
       } else if (code >= 97 && code <= 122) {
@@ -155,32 +247,78 @@ const toggleCase = x => {
   }
   return result.toString();
 };
-const changeCase = toggleCase;
-const left = (x, n) => isSomeString(x) ? x.substr(0, n) : "";
-const right = (x, n) => isSomeString(x) ? x.length > n ? x.substr(x.length - n, n) : x : "";
-const StringTransformations = {
-  free: x => x.trim(),
-  trim: x => x.trim(),
-  ltrim: x => ltrim(x),
-  rtrim: x => rtrim(x),
-  upper: x => x.toUpperCase(),
-  lower: x => x.toLowerCase(),
-  camel: x => camelCase(x),
-  camelcase: x => camelCase(x),
-  pascal: x => pascalCase(x),
-  pascalcase: x => pascalCase(x),
-  toggle: x => toggleCase(x),
-  togglecase: x => toggleCase(x),
-  changecase: x => toggleCase(x),
-  capitalize: x => capitalize(x),
-  reverse: x => reverse(x),
-  stringify: x => stringify(x),
-  unstring: x => unString(x),
-  htmlencode: (x, ignoreList) => htmlEncode(x, ignoreList),
-  htmldecode: (x, ignoreList) => htmlDecode(x, ignoreList),
-  urlencode: (x, full) => full ? encodeURIComponent(x) : encodeURI(x),
-  urldecode: (x, full) => full ? decodeURIComponent(x) : decodeURI(x),
-  isValid: function (transform) {
+var changeCase = toggleCase;
+var left = function left(x, n) {
+  return isSomeString(x) ? x.substr(0, n) : "";
+};
+var right = function right(x, n) {
+  return isSomeString(x) ? x.length > n ? x.substr(x.length - n, n) : x : "";
+};
+var StringTransformations = {
+  free: function free(x) {
+    return x.trim();
+  },
+  trim: function trim(x) {
+    return x.trim();
+  },
+  ltrim: function ltrim(x) {
+    return _ltrim(x);
+  },
+  rtrim: function rtrim(x) {
+    return _rtrim(x);
+  },
+  upper: function upper(x) {
+    return x.toUpperCase();
+  },
+  lower: function lower(x) {
+    return x.toLowerCase();
+  },
+  camel: function camel(x) {
+    return camelCase(x);
+  },
+  camelcase: function camelcase(x) {
+    return camelCase(x);
+  },
+  pascal: function pascal(x) {
+    return pascalCase(x);
+  },
+  pascalcase: function pascalcase(x) {
+    return pascalCase(x);
+  },
+  toggle: function toggle(x) {
+    return toggleCase(x);
+  },
+  togglecase: function togglecase(x) {
+    return toggleCase(x);
+  },
+  changecase: function changecase(x) {
+    return toggleCase(x);
+  },
+  capitalize: function capitalize(x) {
+    return _capitalize(x);
+  },
+  reverse: function reverse(x) {
+    return _reverse(x);
+  },
+  stringify: function stringify(x) {
+    return _stringify(x);
+  },
+  unstring: function unstring(x) {
+    return unString(x);
+  },
+  htmlencode: function htmlencode(x, ignoreList) {
+    return htmlEncode(x, ignoreList);
+  },
+  htmldecode: function htmldecode(x, ignoreList) {
+    return htmlDecode(x, ignoreList);
+  },
+  urlencode: function urlencode(x, full) {
+    return full ? encodeURIComponent(x) : encodeURI(x);
+  },
+  urldecode: function urldecode(x, full) {
+    return full ? decodeURIComponent(x) : decodeURI(x);
+  },
+  isValid: function isValid(transform) {
     return isFunction(this[transform]);
   }
 };
@@ -206,39 +344,61 @@ StringTransformations.he = StringTransformations.htmlencode;
 StringTransformations.hd = StringTransformations.htmldecode;
 StringTransformations.ue = StringTransformations.urlencode;
 StringTransformations.ud = StringTransformations.urldecode;
-const _singleTransform = function (str, transformType) {
-  let result = str;
+var _singleTransform = function _singleTransform(str, transformType) {
+  var result = str;
   if (isFunction(transformType)) {
     result = transformType(str);
   } else {
-    const transform = StringTransformations[transformType];
+    var transform = StringTransformations[transformType];
     if (isFunction(transform)) {
       result = transform(str);
     }
   }
   return result;
 };
-const _transform = function (str, transArray) {
-  let result = str;
-  transArray.forEach(transformType => {
+var _transform = function _transform(str, transArray) {
+  var result = str;
+  transArray.forEach(function (transformType) {
     result = _singleTransform(result, transformType);
   });
   return result;
 };
-const xsplit = function (str, separator, ...transforms) {
-  let result = [];
+var xsplit = function xsplit(str, separator) {
+  var result = [];
   if (isSomeString(str)) {
-    let _transforms = [];
-    let _finalTransforms = [];
-    for (let item of transforms) {
+    var _transforms = [];
+    var _finalTransforms = [];
+    for (var _len = arguments.length, transforms = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      transforms[_key - 2] = arguments[_key];
+    }
+    for (var _i = 0, _transforms2 = transforms; _i < _transforms2.length; _i++) {
+      var item = _transforms2[_i];
       if (isArray(item)) {
-        for (let subItem of item) {
-          _transforms.push(subItem);
+        var _iterator3 = _createForOfIteratorHelper(item),
+          _step3;
+        try {
+          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+            var subItem = _step3.value;
+            _transforms.push(subItem);
+          }
+        } catch (err) {
+          _iterator3.e(err);
+        } finally {
+          _iterator3.f();
         }
       } else if (isSomeString(item)) {
-        let temp = xsplit(item, ",", SplitOptions.trimToLowerAndRemoveEmpties);
-        for (let subItem of temp) {
-          _transforms.push(subItem);
+        var temp = xsplit(item, ",", SplitOptions.trimToLowerAndRemoveEmpties);
+        var _iterator4 = _createForOfIteratorHelper(temp),
+          _step4;
+        try {
+          for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+            var _subItem = _step4.value;
+            _transforms.push(_subItem);
+          }
+        } catch (err) {
+          _iterator4.e(err);
+        } finally {
+          _iterator4.f();
         }
       } else if (isNumeric(item)) {
         _transforms.push(item);
@@ -246,9 +406,10 @@ const xsplit = function (str, separator, ...transforms) {
         _transforms.push(item);
       }
     }
-    for (let transform of _transforms) {
+    for (var _i2 = 0, _transforms3 = _transforms; _i2 < _transforms3.length; _i2++) {
+      var transform = _transforms3[_i2];
       if (SplitOptions.isValid(transform)) {
-        const transformValue = SplitOptions.getNumber(transform);
+        var transformValue = SplitOptions.getNumber(transform);
         switch (transformValue) {
           case SplitOptions.removeEmpties:
             _finalTransforms.push("free");
@@ -281,16 +442,16 @@ const xsplit = function (str, separator, ...transforms) {
         _finalTransforms.push(transform);
       }
     }
-    let arr = str.split(separator);
+    var arr = str.split(separator);
     if (_finalTransforms.length) {
-      let i = 0;
+      var i = 0;
       while (i < arr.length) {
-        let item = arr[i++];
-        item = _transform(item, _finalTransforms);
-        if ((_finalTransforms[_finalTransforms.length - 1] == "free" || _finalTransforms[_finalTransforms.length - 1] == "f") && (!item || item.length == 0)) {
+        var _item = arr[i++];
+        _item = _transform(_item, _finalTransforms);
+        if ((_finalTransforms[_finalTransforms.length - 1] == "free" || _finalTransforms[_finalTransforms.length - 1] == "f") && (!_item || _item.length == 0)) {
           continue;
         }
-        result.push(item);
+        result.push(_item);
       }
     } else {
       result = arr;
@@ -299,18 +460,18 @@ const xsplit = function (str, separator, ...transforms) {
   return result;
 };
 function _nsplit(s, separators, callback, level) {
-  let result = s.split(separators[0]);
+  var result = s.split(separators[0]);
   if (separators.length > 1) {
-    for (let i = 0; i < result.length; i++) {
+    for (var i = 0; i < result.length; i++) {
       result[i] = _nsplit(result[i], separators.slice(1), callback, level + 1);
     }
   } else if (isFunction(callback)) {
-    for (let i = 0; i < result.length; i++) {
-      result[i] = callback({
+    for (var _i3 = 0; _i3 < result.length; _i3++) {
+      result[_i3] = callback({
         input: s,
-        value: result[i],
-        index: i,
-        level,
+        value: result[_i3],
+        index: _i3,
+        level: level,
         separator: separators[0]
       });
     }
@@ -323,20 +484,23 @@ function nsplit(s, separators, callback) {
   }
   return [];
 }
-const format = function (str, ...args) {
-  let result = [];
+var format = function format(str) {
+  var result = [];
+  for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
+    args[_key2 - 1] = arguments[_key2];
+  }
   if (isSomeString(str) && args.length > 0) {
-    let _args;
+    var _args;
     if (args.length == 1) {
       _args = args[0];
     } else {
       _args = args;
     }
-    let i = 0;
-    let state = 0;
-    let temp = "";
+    var i = 0;
+    var state = 0;
+    var temp = "";
     while (i < str.length) {
-      let ch = str[i];
+      var ch = str[i];
       switch (state) {
         case 0:
           if (ch == "{") {
@@ -371,7 +535,7 @@ const format = function (str, ...args) {
             state = 0;
           } else {
             if (!(isWord(ch) || ch == '.' || ch == '[' || ch == ']')) {
-              throw `Invalid character '${ch}' in interpolation.`;
+              throw "Invalid character '".concat(ch, "' in interpolation.");
             }
             temp += ch;
           }
@@ -388,15 +552,15 @@ const format = function (str, ...args) {
       i++;
     }
     if (state == 1) {
-      throw `Unterminated interpolation detected at the end of input.`;
+      throw "Unterminated interpolation detected at the end of input.";
     }
     if (temp.length) {
       result.push(temp);
     }
-    let interpolations = {};
+    var interpolations = {};
     for (i = 0; i < result.length; i++) {
       if (isArray(result[i])) {
-        const key = result[i][0];
+        var key = result[i][0];
         if (interpolations[key] == undefined) {
           if (isFunction(_args)) {
             if (key[0] == '[' && key[key.length - 1] == ']') {
@@ -419,19 +583,20 @@ const format = function (str, ...args) {
   }
   return result.join("");
 };
-function configureStringExtensions(options, extendAsStaticMethods = true) {
-  const eh = new ExtensionHelper(options, console);
+function configureStringExtensions(options) {
+  var extendAsStaticMethods = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+  var eh = new ExtensionHelper(options, console);
   eh.extend(String, "replaceAll", function (find, replace) {
     return replaceAll(this, find, replace);
   });
   eh.extend(String, "reverse", function () {
-    return reverse(this);
+    return _reverse(this);
   });
   eh.extend(String, "ltrim", function () {
-    return ltrim(this);
+    return _ltrim(this);
   });
   eh.extend(String, "rtrim", function () {
-    return rtrim(this);
+    return _rtrim(this);
   });
   eh.extend(String, "toArray", function () {
     return toArray(this);
@@ -439,11 +604,17 @@ function configureStringExtensions(options, extendAsStaticMethods = true) {
   eh.extend(String, "toBytes", function () {
     return toBytes(this);
   });
-  eh.extend(String, "format", function (...args) {
-    return format(this, ...args);
+  eh.extend(String, "format", function () {
+    for (var _len3 = arguments.length, args = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      args[_key3] = arguments[_key3];
+    }
+    return format.apply(void 0, [this].concat(args));
   });
-  eh.extend(String, "isCharacter", function (...args) {
-    return isCharacter(this, ...args);
+  eh.extend(String, "isCharacter", function () {
+    for (var _len4 = arguments.length, args = new Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+      args[_key4] = arguments[_key4];
+    }
+    return isCharacter.apply(void 0, [this].concat(args));
   });
   eh.extend(String, "isPunctuation", function () {
     return isPunctuation(this);
@@ -491,7 +662,7 @@ function configureStringExtensions(options, extendAsStaticMethods = true) {
     return isLetter(this);
   });
   eh.extend(String, "stringify", function (ch) {
-    return stringify(this, ch);
+    return _stringify(this, ch);
   });
   eh.extend(String, "toggleCase", function () {
     return toggleCase(this);
@@ -509,7 +680,7 @@ function configureStringExtensions(options, extendAsStaticMethods = true) {
     return camelCase(this);
   });
   eh.extend(String, "capitalize", function () {
-    return capitalize(this);
+    return _capitalize(this);
   });
   eh.extend(String, "left", function (n) {
     return left(this, n);
@@ -517,11 +688,17 @@ function configureStringExtensions(options, extendAsStaticMethods = true) {
   eh.extend(String, "right", function (n) {
     return right(this, n);
   });
-  eh.extend(String, "xsplit", function (...args) {
-    return xsplit(this, ...args);
+  eh.extend(String, "xsplit", function () {
+    for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+      args[_key5] = arguments[_key5];
+    }
+    return xsplit.apply(void 0, [this].concat(args));
   });
-  eh.extend(String, "nsplit", function (...args) {
-    return nsplit(this, ...args);
+  eh.extend(String, "nsplit", function () {
+    for (var _len6 = arguments.length, args = new Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+      args[_key6] = arguments[_key6];
+    }
+    return nsplit.apply(void 0, [this].concat(args));
   });
   /* examples
   nsplit("a=1&b=ali", '&', '=') or nsplit("a=1&b=ali", ['&', '='])
@@ -557,9 +734,9 @@ function configureStringExtensions(options, extendAsStaticMethods = true) {
 
   if (extendAsStaticMethods) {
     eh.extend(String, "replaceAll", replaceAll, true);
-    eh.extend(String, "reverse", reverse, true);
-    eh.extend(String, "ltrim", ltrim, true);
-    eh.extend(String, "rtrim", rtrim, true);
+    eh.extend(String, "reverse", _reverse, true);
+    eh.extend(String, "ltrim", _ltrim, true);
+    eh.extend(String, "rtrim", _rtrim, true);
     eh.extend(String, "toArray", toArray, true);
     eh.extend(String, "fromArray", fromArray, true);
     eh.extend(String, "toBytes", toBytes, true);
@@ -580,13 +757,13 @@ function configureStringExtensions(options, extendAsStaticMethods = true) {
     eh.extend(String, "isWhitespace", isWhitespace, true);
     eh.extend(String, "isMath", isMath, true);
     eh.extend(String, "isLetter", isLetter, true);
-    eh.extend(String, "stringify", stringify, true);
+    eh.extend(String, "stringify", _stringify, true);
     eh.extend(String, "toggleCase", toggleCase, true);
     eh.extend(String, "changeCase", changeCase, true);
     eh.extend(String, "unString", unString, true);
     eh.extend(String, "pascalCase", pascalCase, true);
     eh.extend(String, "camelCase", camelCase, true);
-    eh.extend(String, "capitalize", capitalize, true);
+    eh.extend(String, "capitalize", _capitalize, true);
     eh.extend(String, "left", left, true);
     eh.extend(String, "right", right, true);
     eh.extend(String, "format", format, true);
@@ -595,4 +772,4 @@ function configureStringExtensions(options, extendAsStaticMethods = true) {
   }
 }
 export default configureStringExtensions;
-export { StringBuilder, SplitOptions, Chars, StringTransformations, replaceAll, reverse, ltrim, rtrim, left, right, toArray, fromArray, toBytes, fromBytes, isCharacter, isPunctuation, isControl, isAlpha, isLower, isUpper, isDigit, isAlphaNum, isWord, isArithmatic, isLogic, isBitwise, isComparison, isWhitespace, isMath, isLetter, toggleCase, changeCase, pascalCase, camelCase, capitalize, stringify, unString, format, xsplit, nsplit };
+export { StringBuilder, SplitOptions, Chars, StringTransformations, replaceAll, _reverse as reverse, _ltrim as ltrim, _rtrim as rtrim, left, right, toArray, fromArray, toBytes, fromBytes, isCharacter, isPunctuation, isControl, isAlpha, isLower, isUpper, isDigit, isAlphaNum, isWord, isArithmatic, isLogic, isBitwise, isComparison, isWhitespace, isMath, isLetter, toggleCase, changeCase, pascalCase, camelCase, _capitalize as capitalize, _stringify as stringify, unString, format, xsplit, nsplit };
