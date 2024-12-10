@@ -1,3 +1,6 @@
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function () {}; return { s: F, n: function () { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function (e) { throw e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function () { it = it.call(o); }, n: function () { var step = it.next(); normalCompletion = step.done; return step; }, e: function (e) { didErr = true; err = e; }, f: function () { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
 function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
@@ -11,7 +14,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
-import { isArray, isString, isSomeString, isNumeric, isFunction, isSomeArray, queryObject } from "@locustjs/base";
+import { isArray, isString, isSomeString, isNumeric, isFunction, isSomeArray, query } from "@locustjs/base";
 import Enum from "@locustjs/enum";
 import ExtensionHelper from "@locustjs/extensions-options";
 import { htmlEncode, htmlDecode } from "@locustjs/htmlencode";
@@ -509,7 +512,7 @@ var format = function format(str) {
             }
             temp = "";
             state = 1;
-          } else if (ch == '}') {
+          } else if (ch == "}") {
             if (temp.length) {
               result.push(temp);
             }
@@ -526,7 +529,7 @@ var format = function format(str) {
           } else if (ch == "}") {
             if (temp) {
               if (isNumeric(temp)) {
-                result.push(['[' + temp + ']']);
+                result.push(["[" + temp + "]"]);
               } else {
                 result.push([temp]);
               }
@@ -534,17 +537,17 @@ var format = function format(str) {
             }
             state = 0;
           } else {
-            if (!(isWord(ch) || ch == '.' || ch == '[' || ch == ']')) {
+            if (!(isWord(ch) || ch == "." || ch == "[" || ch == "]")) {
               throw "Invalid character '".concat(ch, "' in interpolation.");
             }
             temp += ch;
           }
           break;
         case 2:
-          if (ch == '}') {
+          if (ch == "}") {
             result.push("}");
           } else {
-            temp = '}' + ch;
+            temp = "}" + ch;
           }
           state = 0;
           break;
@@ -560,22 +563,43 @@ var format = function format(str) {
     var interpolations = {};
     for (i = 0; i < result.length; i++) {
       if (isArray(result[i])) {
+        var fArgs = {
+          source: str,
+          part: i,
+          args: args
+        };
         var key = result[i][0];
+        var isArrayKey = key[0] == "[" && key[key.length - 1] == "]";
         if (interpolations[key] == undefined) {
           if (isFunction(_args)) {
-            if (key[0] == '[' && key[key.length - 1] == ']') {
-              interpolations[key] = _args(key.substr(1, key.length - 2));
+            if (isArrayKey) {
+              interpolations[key] = _args(_objectSpread(_objectSpread({}, fArgs), {}, {
+                index: key.substr(1, key.length - 2),
+                key: key.substr(1, key.length - 2)
+              }));
             } else {
-              interpolations[key] = _args(key);
+              interpolations[key] = _args(_objectSpread(_objectSpread({}, fArgs), {}, {
+                index: key,
+                key: key
+              }));
             }
           } else {
-            interpolations[key] = queryObject(_args, key);
+            interpolations[key] = query(_args, key);
           }
           if (isFunction(interpolations[key])) {
-            interpolations[key] = interpolations[key]();
+            interpolations[key] = interpolations[key](_objectSpread(_objectSpread({}, fArgs), {}, {
+              key: key
+            }));
           }
         }
         result[i] = interpolations[key];
+        if (result[i] === undefined) {
+          if (isArrayKey) {
+            result[i] = key;
+          } else {
+            result[i] = "{" + key + "}";
+          }
+        }
       }
     }
   } else {

@@ -5,7 +5,7 @@ import {
   isNumeric,
   isFunction,
   isSomeArray,
-  queryObject
+  query,
 } from "@locustjs/base";
 import Enum from "@locustjs/enum";
 import ExtensionHelper from "@locustjs/extensions-options";
@@ -290,7 +290,7 @@ const toggleCase = (x) => {
 const changeCase = toggleCase;
 
 const left = (x, n) => (isSomeString(x) ? x.substr(0, n) : "");
-const right = (x, n) => (isSomeString(x) ? (x.length > n ? x.substr(x.length - n, n) : x) : "");
+const right = (x, n) => isSomeString(x) ? (x.length > n ? x.substr(x.length - n, n) : x) : "";
 
 const StringTransformations = {
   free: (x) => x.trim(),
@@ -439,7 +439,8 @@ const xsplit = function (str, separator, ...transforms) {
         item = _transform(item, _finalTransforms);
 
         if (
-          (_finalTransforms[_finalTransforms.length - 1] == "free" || _finalTransforms[_finalTransforms.length - 1] == "f") &&
+          (_finalTransforms[_finalTransforms.length - 1] == "free" ||
+            _finalTransforms[_finalTransforms.length - 1] == "f") &&
           (!item || item.length == 0)
         ) {
           continue;
@@ -492,7 +493,7 @@ const format = function (str, ...args) {
     if (args.length == 1) {
       _args = args[0];
     } else {
-      _args = args
+      _args = args;
     }
 
     let i = 0;
@@ -511,7 +512,7 @@ const format = function (str, ...args) {
 
             temp = "";
             state = 1;
-          } else if (ch == '}') {
+          } else if (ch == "}") {
             if (temp.length) {
               result.push(temp);
             }
@@ -530,7 +531,7 @@ const format = function (str, ...args) {
           } else if (ch == "}") {
             if (temp) {
               if (isNumeric(temp)) {
-                result.push(['[' + temp + ']']);
+                result.push(["[" + temp + "]"]);
               } else {
                 result.push([temp]);
               }
@@ -539,7 +540,7 @@ const format = function (str, ...args) {
 
             state = 0;
           } else {
-            if (!(isWord(ch) || ch == '.' || ch == '[' || ch == ']')) {
+            if (!(isWord(ch) || ch == "." || ch == "[" || ch == "]")) {
               throw `Invalid character '${ch}' in interpolation.`;
             }
 
@@ -548,14 +549,14 @@ const format = function (str, ...args) {
 
           break;
         case 2:
-          if (ch == '}') {
+          if (ch == "}") {
             result.push("}");
           } else {
-            temp = '}' + ch;
+            temp = "}" + ch;
           }
 
           state = 0;
-          
+
           break;
       }
 
@@ -574,25 +575,46 @@ const format = function (str, ...args) {
 
     for (i = 0; i < result.length; i++) {
       if (isArray(result[i])) {
+        const fArgs = { source: str, part: i, args };
         const key = result[i][0];
+        const isArrayKey = key[0] == "[" && key[key.length - 1] == "]";
 
         if (interpolations[key] == undefined) {
           if (isFunction(_args)) {
-            if (key[0] == '[' && key[key.length - 1] == ']') {
-              interpolations[key] = _args(key.substr(1, key.length - 2))
+            if (isArrayKey) {
+              interpolations[key] = _args({
+                ...fArgs,
+                index: key.substr(1, key.length - 2),
+                key: key.substr(1, key.length - 2),
+              });
             } else {
-              interpolations[key] = _args(key)
+              interpolations[key] = _args({
+                ...fArgs,
+                index: key,
+                key,
+              });
             }
           } else {
-            interpolations[key] = queryObject(_args, key);
+            interpolations[key] = query(_args, key);
           }
 
           if (isFunction(interpolations[key])) {
-            interpolations[key] = interpolations[key]()
+            interpolations[key] = interpolations[key]({
+              ...fArgs,
+              key,
+            });
           }
         }
 
         result[i] = interpolations[key];
+
+        if (result[i] === undefined) {
+          if (isArrayKey) {
+            result[i] = key;
+          } else {
+            result[i] = "{" + key + "}";
+          }
+        }
       }
     }
   } else {

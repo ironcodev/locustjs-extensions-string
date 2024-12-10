@@ -1,6 +1,6 @@
 {
   "name": "@locustjs/extensions-string",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "This library contains extension methods for string",
   "main": "index.cjs.js",
   "module": "index.esm.js",
@@ -14,7 +14,8 @@
   },
   "keywords": [
     "locustjs",
-    "extensions"
+    "extensions",
+    "string"
   ],
   "author": "Iron Code",
   "license": "MIT",
@@ -30,7 +31,7 @@
     "esm": "^3.2.25"
   },
   "dependencies": {
-    "@locustjs/base": "^3.0.1",
+    "@locustjs/base": "^4.1.0",
     "@locustjs/enum": "^2.0.0",
     "@locustjs/extensions-options": "^2.1.0",
     "@locustjs/htmlencode": "^1.0.1"
