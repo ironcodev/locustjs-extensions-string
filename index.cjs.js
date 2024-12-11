@@ -14,7 +14,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
-import { isArray, isString, isSomeString, isNumeric, isFunction, isSomeArray, query, isNullOrEmpty } from "@locustjs/base";
+import { isArray, isString, isSomeString, isNumeric, isFunction, isSomeArray, query, isPrimitive } from "@locustjs/base";
 import Enum from "@locustjs/enum";
 import ExtensionHelper from "@locustjs/extensions-options";
 import { htmlEncode, htmlDecode } from "@locustjs/htmlencode";
@@ -570,12 +570,13 @@ var format = function format(str) {
         };
         var key = result[i][0];
         var isArrayKey = key[0] == "[" && key[key.length - 1] == "]";
+        var arrayKeyIndex = isArrayKey ? key.substr(1, key.length - 2) : -1;
         if (interpolations[key] == undefined) {
           if (isFunction(_args)) {
             if (isArrayKey) {
               interpolations[key] = _args(_objectSpread(_objectSpread({}, fArgs), {}, {
-                index: key.substr(1, key.length - 2),
-                key: key.substr(1, key.length - 2)
+                index: arrayKeyIndex,
+                key: arrayKeyIndex
               }));
             } else {
               interpolations[key] = _args(_objectSpread(_objectSpread({}, fArgs), {}, {
@@ -584,7 +585,11 @@ var format = function format(str) {
               }));
             }
           } else {
-            interpolations[key] = query(_args, key);
+            if (isPrimitive(_args)) {
+              interpolations[key] = query([_args], key);
+            } else {
+              interpolations[key] = query(_args, key);
+            }
           }
           if (isFunction(interpolations[key])) {
             interpolations[key] = interpolations[key](_objectSpread(_objectSpread({}, fArgs), {}, {
@@ -595,7 +600,7 @@ var format = function format(str) {
         result[i] = interpolations[key];
         if (result[i] === undefined) {
           if (isArrayKey) {
-            result[i] = "{" + key.substr(1, key.length - 2) + "}";
+            result[i] = "{" + arrayKeyIndex + "}";
           } else {
             result[i] = "{" + key + "}";
           }

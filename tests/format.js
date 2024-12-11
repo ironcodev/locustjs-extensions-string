@@ -2,6 +2,26 @@ import { format } from "../index.esm.js";
 
 const tests = [
   [
+    "format: test 1 - array 01",
+    function (expect) {
+      const str1 = "hello {0}.";
+      const str2 = format(str1, "John");
+      const r1 = "hello John.";
+
+      expect(str2).toBe(r1);
+    },
+  ],
+  [
+    "format: test 1 - array 02",
+    function (expect) {
+      const str1 = "hello {0}. It is {1} today.";
+      const str2 = format(str1, "John");
+      const r1 = "hello John. It is {1} today.";
+
+      expect(str2).toBe(r1);
+    },
+  ],
+  [
     "format: test 1 - array 1",
     function (expect) {
       const str1 = "hello {0}. It is {1} today.";

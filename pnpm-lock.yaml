@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@locustjs/base':
-    specifier: ^4.1.0
-    version: 4.1.0
+    specifier: ^4.1.1
+    version: 4.1.1
   '@locustjs/enum':
     specifier: ^2.0.0
     version: 2.0.0
@@ -1307,8 +1307,8 @@ packages:
   /@locustjs/base@2.1.0:
     resolution: {integrity: sha512-o650/LAmcdjpJzGh36JDVJ4FXvFk4EFp4/g56RNlpfmLvgbeP8Zb/OPUucql+DkBhksbtkDLUNIFVnQMi+G4Iw==}
 
-  /@locustjs/base@4.1.0:
-    resolution: {integrity: sha512-IlTzlRmbCuAfV+TZ9436I4s9kSSc9QCYnnCbZdbKBhjn0CiKxv2ebihUE8dDgWW/NqfXItri2kpNnR1UTk5GGQ==}
+  /@locustjs/base@4.1.1:
+    resolution: {integrity: sha512-5iihfY51qy68WR+5nPmPv7nKgcXtU7K9ew27TWQEuA2tEzZpYJtGdEULhOTysK7ZCG3lmQA54AN/oBRoCxVpCQ==}
 
   /@locustjs/enum@2.0.0:
     resolution: {integrity: sha512-xfaJpQZrp1mv5jazd0AutH7pNgaVafVwYVGlB0qiXRrKPL1iX4P0cyPp236pZ5jGHqHZekTtrxkxVH7DxScHdw==}
@@ -1337,7 +1337,7 @@ packages:
   /@locustjs/test@1.4.0:
     resolution: {integrity: sha512-wgUVmbSmi/62b058oMlXyLPCqtTaMenLRvNMocuGxjJsvFehCTeOr8+UD3esgQGKTKLIRdJ3Ov0uH7++FxY5Aw==}
     dependencies:
-      '@locustjs/base': 4.1.0
+      '@locustjs/base': 4.1.1
       '@locustjs/exception': 2.0.2
     dev: true
 

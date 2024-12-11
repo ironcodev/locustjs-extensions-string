@@ -6,7 +6,7 @@ import {
   isFunction,
   isSomeArray,
   query,
-  isNullOrEmpty,
+  isPrimitive,
 } from "@locustjs/base";
 import Enum from "@locustjs/enum";
 import ExtensionHelper from "@locustjs/extensions-options";
@@ -539,6 +539,7 @@ const format = function (str, ...args) {
               } else {
                 result.push([temp]);
               }
+
               temp = "";
             }
 
@@ -582,14 +583,15 @@ const format = function (str, ...args) {
         const fArgs = { source: str, part: i, args };
         const key = result[i][0];
         const isArrayKey = key[0] == "[" && key[key.length - 1] == "]";
+        const arrayKeyIndex = isArrayKey ? key.substr(1, key.length - 2): -1;
 
         if (interpolations[key] == undefined) {
           if (isFunction(_args)) {
             if (isArrayKey) {
               interpolations[key] = _args({
                 ...fArgs,
-                index: key.substr(1, key.length - 2),
-                key: key.substr(1, key.length - 2),
+                index: arrayKeyIndex,
+                key: arrayKeyIndex,
               });
             } else {
               interpolations[key] = _args({
@@ -599,7 +601,11 @@ const format = function (str, ...args) {
               });
             }
           } else {
-            interpolations[key] = query(_args, key);
+            if (isPrimitive(_args)) {
+              interpolations[key] = query([_args], key);
+            } else {
+              interpolations[key] = query(_args, key);
+            }
           }
 
           if (isFunction(interpolations[key])) {
@@ -614,7 +620,7 @@ const format = function (str, ...args) {
 
         if (result[i] === undefined) {
           if (isArrayKey) {
-            result[i] = "{" + key.substr(1, key.length - 2) + "}";
+            result[i] = "{" + arrayKeyIndex + "}";
           } else {
             result[i] = "{" + key + "}";
           }
