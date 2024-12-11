@@ -14,7 +14,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
 function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
-import { isArray, isString, isSomeString, isNumeric, isFunction, isSomeArray, query } from "@locustjs/base";
+import { isArray, isString, isSomeString, isNumeric, isFunction, isSomeArray, query, isNullOrEmpty } from "@locustjs/base";
 import Enum from "@locustjs/enum";
 import ExtensionHelper from "@locustjs/extensions-options";
 import { htmlEncode, htmlDecode } from "@locustjs/htmlencode";
@@ -489,16 +489,16 @@ function nsplit(s, separators, callback) {
 }
 var format = function format(str) {
   var result = [];
+  var _args;
   for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
     args[_key2 - 1] = arguments[_key2];
   }
-  if (isSomeString(str) && args.length > 0) {
-    var _args;
-    if (args.length == 1) {
-      _args = args[0];
-    } else {
-      _args = args;
-    }
+  if (args.length == 1) {
+    _args = args[0];
+  } else {
+    _args = args;
+  }
+  if (isSomeString(str) && args.length) {
     var i = 0;
     var state = 0;
     var temp = "";
@@ -595,7 +595,7 @@ var format = function format(str) {
         result[i] = interpolations[key];
         if (result[i] === undefined) {
           if (isArrayKey) {
-            result[i] = key;
+            result[i] = "{" + key.substr(1, key.length - 2) + "}";
           } else {
             result[i] = "{" + key + "}";
           }

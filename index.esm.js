@@ -6,6 +6,7 @@ import {
   isFunction,
   isSomeArray,
   query,
+  isNullOrEmpty,
 } from "@locustjs/base";
 import Enum from "@locustjs/enum";
 import ExtensionHelper from "@locustjs/extensions-options";
@@ -184,7 +185,8 @@ const Chars = {
 };
 
 const isCharacter = (x) => isString(x) && x.length == 1;
-const isPunctuation = (x) => isSomeString(x) && Chars.punctuation.indexOf(x) >= 0;
+const isPunctuation = (x) =>
+  isSomeString(x) && Chars.punctuation.indexOf(x) >= 0;
 const isControl = (x) => isSomeString(x) && Chars.control.indexOf(x) >= 0;
 const isAlpha = (x) => isSomeString(x) && x.match(/^[a-z]+$/i) !== null;
 const isLower = (x) => isSomeString(x) && x.match(/^[a-z]+$/) !== null;
@@ -197,7 +199,8 @@ const isLogic = (x) => isSomeString(x) && Chars.logic.indexOf(x) >= 0;
 const isBitwise = (x) => isSomeString(x) && Chars.bitwise.indexOf(x) >= 0;
 const isComparison = (x) => isSomeString(x) && Chars.comparison.indexOf(x) >= 0;
 const isWhitespace = (x) => isSomeString(x) && x.match(/^\s+$/) !== null;
-const isMath = (x) => isArithmatic(x) || isLogic(x) || isBitwise(x) || isComparison(x);
+const isMath = (x) =>
+  isArithmatic(x) || isLogic(x) || isBitwise(x) || isComparison(x);
 const isLetter = isAlpha;
 
 const stringify = (x, ch = '"') => `${ch}${x}${ch}`;
@@ -290,7 +293,8 @@ const toggleCase = (x) => {
 const changeCase = toggleCase;
 
 const left = (x, n) => (isSomeString(x) ? x.substr(0, n) : "");
-const right = (x, n) => isSomeString(x) ? (x.length > n ? x.substr(x.length - n, n) : x) : "";
+const right = (x, n) =>
+  isSomeString(x) ? (x.length > n ? x.substr(x.length - n, n) : x) : "";
 
 const StringTransformations = {
   free: (x) => x.trim(),
@@ -487,15 +491,15 @@ function nsplit(s, separators, callback) {
 const format = function (str, ...args) {
   let result = [];
 
-  if (isSomeString(str) && args.length > 0) {
-    let _args;
+  let _args;
 
-    if (args.length == 1) {
-      _args = args[0];
-    } else {
-      _args = args;
-    }
+  if (args.length == 1) {
+    _args = args[0];
+  } else {
+    _args = args;
+  }
 
+  if (isSomeString(str) && args.length) {
     let i = 0;
     let state = 0;
     let temp = "";
@@ -610,7 +614,7 @@ const format = function (str, ...args) {
 
         if (result[i] === undefined) {
           if (isArrayKey) {
-            result[i] = key;
+            result[i] = "{" + key.substr(1, key.length - 2) + "}";
           } else {
             result[i] = "{" + key + "}";
           }
@@ -807,19 +811,16 @@ export {
   SplitOptions,
   Chars,
   StringTransformations,
-
   replaceAll,
   reverse,
   ltrim,
   rtrim,
   left,
   right,
-  
   toArray,
   fromArray,
   toBytes,
   fromBytes,
-
   isCharacter,
   isPunctuation,
   isControl,
@@ -836,13 +837,11 @@ export {
   isWhitespace,
   isMath,
   isLetter,
-
   toggleCase,
   changeCase,
   pascalCase,
   camelCase,
   capitalize,
-
   stringify,
   unString,
   format,

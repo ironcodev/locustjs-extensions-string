@@ -98,10 +98,30 @@ const tests = [
     },
   ],
   [
-    "format: test 5 - missing args: array",
+    "format: test 5 - missing args: array 1",
+    function (expect) {
+      const str1 = "hello {0}.";
+      const str2 = format(str1, undefined);
+      const r1 = "hello {0}.";
+
+      expect(str2).toBe(r1);
+    },
+  ],
+  [
+    "format: test 5 - missing args: array 2",
     function (expect) {
       const str1 = "hello {0}. It is {1} today.";
       const str2 = format(str1);
+      const r1 = "hello {0}. It is {1} today.";
+
+      expect(str2).toBe(r1);
+    },
+  ],
+  [
+    "format: test 5 - missing args: array 3",
+    function (expect) {
+      const str1 = "hello {0}. It is {1} today.";
+      const str2 = format(str1, undefined, undefined);
       const r1 = "hello {0}. It is {1} today.";
 
       expect(str2).toBe(r1);
@@ -123,6 +143,46 @@ const tests = [
       const str1 = "hello {name}. It is {day} today.";
       const str2 = format(str1, { name: "John" });
       const r1 = "hello John. It is {day} today.";
+
+      expect(str2).toBe(r1);
+    },
+  ],
+  [
+    "format: test 5 - missing args: object 3",
+    function (expect) {
+      const str1 = "hello {name}. It is {day} today.";
+      const str2 = format(str1, undefined);
+      const r1 = "hello {name}. It is {day} today.";
+
+      expect(str2).toBe(r1);
+    },
+  ],
+  [
+    "format: test 5 - missing args: object 4",
+    function (expect) {
+      const str1 = "hello {name}. It is {day} today.";
+      const str2 = format(str1, undefined, undefined);
+      const r1 = "hello {name}. It is {day} today.";
+
+      expect(str2).toBe(r1);
+    },
+  ],
+  [
+    "format: test 5 - missing args: object 5",
+    function (expect) {
+      const str1 = "hello {name}. It is {day} today.";
+      const str2 = format(str1, null);
+      const r1 = "hello {name}. It is {day} today.";
+
+      expect(str2).toBe(r1);
+    },
+  ],
+  [
+    "format: test 5 - missing args: object 6",
+    function (expect) {
+      const str1 = "hello {name}. It is {day} today.";
+      const str2 = format(str1, null, undefined);
+      const r1 = "hello {name}. It is {day} today.";
 
       expect(str2).toBe(r1);
     },
