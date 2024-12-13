@@ -31,4 +31,4 @@ const tests = [
   ...test14,
 ];
 
-TestRunner.start(tests)
+TestRunner.start(tests);

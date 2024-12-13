@@ -207,6 +207,26 @@ const tests = [
       expect(str2).toBe(r1);
     },
   ],
+  [
+    "format: escaping without args",
+    (expect) => {
+      let s = "{{";
+
+      expect(format(s)).toBe("{");
+
+      s = "{{}}";
+
+      expect(format(s)).toBe("{}");
+
+      s = "{{0}}";
+
+      expect(format(s)).toBe("{0}");
+
+      s = "hello {{name}}";
+
+      expect(format(s)).toBe("hello {name}");
+    },
+  ],
 ];
 
 export default tests;
