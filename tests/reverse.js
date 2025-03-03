@@ -1,4 +1,4 @@
-import { reverse } from "../index.esm.js";
+import { reverse } from "../src";
 
 const tests = [
   [

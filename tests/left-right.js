@@ -1,4 +1,4 @@
-import { left, right } from "../index.esm.js";
+import { left, right } from "../src";
 
 const tests = [
   [

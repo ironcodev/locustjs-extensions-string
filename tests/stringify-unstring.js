@@ -1,5 +1,5 @@
 import { isSomeString } from "@locustjs/base";
-import { stringify, unString } from "../index.esm.js";
+import { stringify, unString } from "../src";
 
 const tests = [
   [

@@ -1,4 +1,4 @@
-import { ltrim, rtrim } from "../index.esm.js";
+import { ltrim, rtrim } from "../src";
 
 const tests = [
   [

@@ -1,5 +1,5 @@
 import { isArray } from "@locustjs/base";
-import { toArray } from "../index.esm.js";
+import { toArray } from "../src";
 
 const tests = [
   [

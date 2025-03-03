@@ -1,4 +1,4 @@
-import { format } from "../index.esm.js";
+import { format } from "../src";
 
 const tests = [
   [

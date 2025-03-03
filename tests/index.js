@@ -12,7 +12,8 @@ import test11 from "./fromArray";
 import test12 from "./stringify-unstring";
 import test13 from "./nsplit";
 import test14 from "./xsplit";
-import TestRunner from "@locustjs/test";
+import test15 from "./String.split";
+import { TestRunner } from "@locustjs/test";
 
 const tests = [
   ...test1,
@@ -29,6 +30,7 @@ const tests = [
   ...test12,
   ...test13,
   ...test14,
+  ...test15,
 ];
 
-TestRunner.start(tests);
+TestRunner.start(tests, true);

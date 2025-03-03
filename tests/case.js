@@ -1,8 +1,8 @@
-import { pascalCase, camelCase, changeCase, capitalize } from "../index.esm.js";
+import { pascalCase, camelCase, changeCase, capitalize } from "../src";
 
 const tests = [
   [
-    "pascalCase",
+    "pascalCase 1",
     function (expect) {
       const x = pascalCase("hello world");
 
@@ -10,11 +10,43 @@ const tests = [
     },
   ],
   [
-    "camelCase",
+    "pascalCase 2",
+    function (expect) {
+      const x = pascalCase("hello world", false);
+
+      expect(x).toBeDefined().toBe('Hello World');
+    },
+  ],
+  [
+    "pascalCase 3",
+    function (expect) {
+      const x = pascalCase("hello world", "-");
+
+      expect(x).toBeDefined().toBe('Hello-World');
+    },
+  ],
+  [
+    "camelCase 1",
     function (expect) {
       const x = camelCase("hello world");
 
       expect(x).toBeDefined().toBe('helloWorld');
+    },
+  ],
+  [
+    "camelCase 2",
+    function (expect) {
+      const x = camelCase("hello world", false);
+
+      expect(x).toBeDefined().toBe('hello World');
+    },
+  ],
+  [
+    "camelCase 3",
+    function (expect) {
+      const x = camelCase("hello world", "-");
+
+      expect(x).toBeDefined().toBe('hello-World');
     },
   ],
   [

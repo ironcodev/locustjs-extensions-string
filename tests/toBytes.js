@@ -1,4 +1,4 @@
-import { toBytes } from "../index.esm.js";
+import { toBytes } from "../src";
 
 const tests = [
   [

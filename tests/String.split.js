@@ -1,11 +1,22 @@
 import { isArray } from "@locustjs/base";
-import { SplitOptions, xsplit } from "../src";
+import { configureStringExtensions, SplitOptions } from "../src";
+
+configureStringExtensions("split");
 
 const tests = [
   [
-    "xsplit: 1 (use string transforms)",
+    "String.prototype.split: 1 (use string transforms)",
     function (expect) {
-      const x = xsplit("Red, Green,  ,\t, Blue,,", ",", "trim,lower,free");
+      const x = "Red, Green,  ,\t, Blue,,".split(",");
+
+      expect(isArray(x)).toBeTrue();
+      expect(x.length).toBe(7);
+    },
+  ],
+  [
+    "String.prototype.split: 1 (use string transforms)",
+    function (expect) {
+      const x = "Red, Green,  ,\t, Blue,,".split(",", "trim,lower,free");
 
       expect(isArray(x)).toBeTrue();
       expect(x.length).toBe(3);
@@ -15,15 +26,9 @@ const tests = [
     },
   ],
   [
-    "xsplit: 2 (use multi-string transforms)",
+    "String.prototype.split: 2 (use multi-string transforms)",
     function (expect) {
-      const x = xsplit(
-        "Red, Green,  ,\t, Blue,,",
-        ",",
-        "trim",
-        "lower",
-        "free"
-      );
+      const x = "Red, Green,  ,\t, Blue,,".split(",", "trim", "lower", "free");
 
       expect(isArray(x)).toBeTrue();
       expect(x.length).toBe(3);
@@ -33,9 +38,9 @@ const tests = [
     },
   ],
   [
-    "xsplit: 3 (use array transforms)",
+    "String.prototype.split: 3 (use array transforms)",
     function (expect) {
-      const x = xsplit("Red, Green,  ,\t, Blue,,", ",", [
+      const x = "Red, Green,  ,\t, Blue,,".split(",", [
         "trim",
         "lower",
         "free",
@@ -49,9 +54,9 @@ const tests = [
     },
   ],
   [
-    "xsplit: 4 (use shortcut string transforms)",
+    "String.prototype.split: 4 (use shortcut string transforms)",
     function (expect) {
-      const x = xsplit("Red, Green,  ,\t, Blue,,", ",", "t,l,f");
+      const x = "Red, Green,  ,\t, Blue,,".split(",", "t,l,f");
 
       expect(isArray(x)).toBeTrue();
       expect(x.length).toBe(3);
@@ -61,9 +66,9 @@ const tests = [
     },
   ],
   [
-    "xsplit: 1 (use enum transforms)",
+    "String.prototype.split: 1 (use enum transforms)",
     function (expect) {
-      const x = xsplit("Red, Green,  ,\t, Blue,,", ",", [SplitOptions.trimToLowerAndRemoveEmpties]);
+      const x = "Red, Green,  ,\t, Blue,,".split(",", [SplitOptions.trimToLowerAndRemoveEmpties]);
 
       expect(isArray(x)).toBeTrue();
       expect(x.length).toBe(3);

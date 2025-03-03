@@ -1,4 +1,4 @@
-import { replaceAll } from "../index.esm.js";
+import { replaceAll } from "../src";
 
 const tests = [
   [

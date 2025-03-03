@@ -1,5 +1,5 @@
 import { isArray } from "@locustjs/base";
-import { nsplit } from "../index.esm.js";
+import { nsplit } from "../src";
 
 const tests = [
   [
